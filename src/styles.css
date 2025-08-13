@@ -1,0 +1,265 @@
+/* =========================
+   Design Tokens
+========================= */
+:root{
+  --bg: #0b0d10;
+  --panel: #11151b;
+  --panel-2: #0e1217;
+  --text: #eaf2ff;
+  --muted: #9fb0c8;
+  --line: #1d2430;
+
+  --primary: #7aa2ff;
+  --primary-2: #a4baff;
+  --accent: #8cf0d9;
+  --warning: #ffd27a;
+  --danger: #ff8f8f;
+
+  --radius-xl: 20px;
+  --radius-lg: 14px;
+  --radius-md: 10px;
+
+  --shadow-1: 0 6px 30px rgba(0,0,0,.35);
+  --shadow-2: 0 2px 10px rgba(0,0,0,.4);
+
+  --focus: 0 0 0 3px rgba(122,162,255,.35);
+  --font: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Apple SD Gothic Neo", "Noto Sans KR", "Malgun Gothic", "Helvetica Neue", Arial, "Apple Color Emoji", "Segoe UI Emoji";
+}
+
+@media (prefers-color-scheme: light){
+  :root{
+    --bg:#f6f8fc;
+    --panel:#ffffff;
+    --panel-2:#f9fbff;
+    --text:#0c1220;
+    --muted:#5b6b85;
+    --line:#e6ecf5;
+
+    --primary:#4b74ff;
+    --primary-2:#6a8bff;
+    --accent:#17c9a6;
+    --warning:#c37c00;
+    --danger:#e64545;
+
+    --shadow-1: 0 8px 30px rgba(16,35,80,.12);
+    --shadow-2: 0 2px 10px rgba(16,35,80,.08);
+    --focus: 0 0 0 3px rgba(75,116,255,.25);
+  }
+}
+
+/* =========================
+   Base
+========================= */
+*{ box-sizing: border-box; }
+html, body, #root{ height:100%; }
+body{
+  margin:0;
+  font-family:var(--font);
+  color:var(--text);
+  background:
+    radial-gradient(1200px 800px at 20% -10%, rgba(122,162,255,.12), transparent 60%),
+    radial-gradient(1000px 700px at 110% 10%, rgba(140,240,217,.10), transparent 60%),
+    var(--bg);
+  letter-spacing:.2px;
+}
+button{ font:inherit; }
+input, button{ outline:none; }
+
+/* =========================
+   App Shell
+========================= */
+.app-shell{
+  min-height:100%;
+  display:grid;
+  place-items:center;
+  padding:40px 18px;
+}
+
+/* =========================
+   Card
+========================= */
+.card{
+  width:min(960px, 94vw);
+  background:var(--panel);
+  border:1px solid var(--line);
+  border-radius:var(--radius-xl);
+  box-shadow:var(--shadow-1);
+  padding:24px;
+}
+.auth-card{             /* 로그인/회원가입 카드 폭 고정 */
+  width:min(560px, 94vw);
+  margin-inline:auto;
+}
+
+.card .header{
+  display:flex; align-items:center; gap:12px; margin-bottom:14px;
+}
+.logo{
+  width:34px; height:34px; border-radius:12px;
+  background:
+    radial-gradient(16px 16px at 70% 30%, var(--accent), transparent 60%),
+    radial-gradient(22px 22px at 30% 70%, var(--primary), transparent 60%),
+    var(--panel-2);
+  border:1px solid var(--line);
+  box-shadow:var(--shadow-2) inset;
+}
+.title{ font-weight:800; font-size:18px; letter-spacing:.3px; }
+
+.divider{
+  height:1px;
+  background:linear-gradient(90deg, transparent, var(--line), transparent);
+  margin:16px 0 8px;
+}
+
+/* =========================
+   Forms
+========================= */
+.form{ display:grid; gap:14px; margin-top:8px; }
+
+.field{ position:relative; display:grid; gap:6px; }
+.input{
+  width:100%;
+  background:var(--panel-2);
+  border:1px solid var(--line);
+  color:var(--text);
+  border-radius:12px;
+  padding:14px 12px;
+  transition:border-color .15s ease, box-shadow .15s ease, background .15s ease, transform .04s ease;
+}
+.input:focus{
+  border-color:var(--primary);
+  box-shadow:var(--focus);
+}
+.input.has-icon{ padding-left:12px; }
+
+/* Floating label */
+.floating{
+  position:absolute; left:12px; top:12px;
+  color:var(--muted); pointer-events:none;
+  transition: transform .15s ease, color .15s ease, top .15s ease, font-size .15s ease;
+  padding:0 4px;
+  background:transparent;
+}
+.input:focus + .floating,
+.input:not(:placeholder-shown) + .floating{
+  top:-8px; transform:translateY(-2px) scale(.88);
+  color:var(--primary-2);
+  background:var(--panel);
+  border-radius:8px;
+}
+
+.help{ font-size:12px; color:var(--muted); }
+.field.error .input{
+  border-color:var(--danger);
+  box-shadow:0 0 0 3px rgba(255,143,143,.15);
+}
+.field.error .help{ color:var(--danger); }
+
+/* =========================
+   Buttons
+========================= */
+.actions{ display:flex; gap:10px; margin-top:6px; align-items:center; }
+.btn{
+  display:inline-grid; place-items:center;
+  min-width:120px; height:42px; padding:0 16px;
+  border:none; cursor:pointer; border-radius:12px;
+  color:#0b0d10; font-weight:700;
+  background:linear-gradient(180deg, var(--primary), var(--primary-2));
+  box-shadow:0 6px 18px rgba(122,162,255,.25);
+  transition:transform .05s ease, filter .15s ease, opacity .2s ease;
+}
+.btn:hover{ filter:brightness(1.02); }
+.btn:active{ transform:translateY(1px); }
+.btn:disabled{ opacity:.6; cursor:not-allowed; }
+
+.spinner{
+  width:18px; height:18px; border-radius:50%;
+  border:2px solid rgba(255,255,255,.55);
+  border-top-color: rgba(255,255,255,1);
+  animation:spin .6s linear infinite;
+}
+@keyframes spin{ to{ transform:rotate(360deg); } }
+
+.helper{ margin:6px 2px 0; color:var(--muted); font-size:13px; }
+
+/* 링크 버튼 (회원가입 해보세요) */
+.link{
+  border:none; background:transparent; color:var(--primary);
+  font-weight:700; cursor:pointer; padding:0; margin-left:4px;
+}
+.link:hover{ text-decoration:underline; }
+
+/* =========================
+   Topbar
+========================= */
+.topbar{
+  width:min(1000px, 94vw);
+  display:flex; align-items:center; justify-content:space-between;
+  margin-bottom:16px; padding:10px 14px;
+  background:rgba(255,255,255,.02);
+  border:1px solid var(--line);
+  border-radius:14px;
+  box-shadow:var(--shadow-2);
+  backdrop-filter: blur(6px);
+}
+.user-chip{
+  display:flex; gap:8px; align-items:center;
+  padding:6px 10px; border-radius:999px;
+  border:1px solid var(--line);
+  background:var(--panel-2); color:var(--text);
+}
+.logout{
+  border:none; background:transparent; color:var(--danger);
+  font-weight:700; cursor:pointer; padding:8px 10px; border-radius:10px;
+  transition:background .15s ease;
+}
+.logout:hover{ background:rgba(255,143,143,.12); }
+
+.card h2{ font-size:18px; letter-spacing:.2px; }
+
+/* 접근성 포커스 */
+button:focus-visible{ box-shadow:var(--focus); }
+
+/* =========================
+   Modal (Portal)
+========================= */
+.modal-overlay{
+  position: fixed; inset: 0;
+  display: grid; place-items: center;
+  z-index: 1000; /* 최상단 */
+}
+.overlay-bg{
+  position: fixed; inset: 0;
+  background: rgba(12,18,32,.45);
+  backdrop-filter: blur(4px);
+  z-index: 1;  /* 배경 */
+  border: none; padding: 0; margin: 0;
+}
+.modal-card{
+  width: min(560px, 94vw);
+  position: relative;
+  z-index: 2;  /* 카드가 항상 위 */
+  animation: pop .14s ease-out;
+}
+.modal-close{
+  margin-left:auto; border:none; background:transparent; color:var(--muted);
+  font-size:22px; line-height:1; cursor:pointer; padding:2px 6px; border-radius:8px;
+}
+.modal-close:hover{ background:rgba(255,255,255,.06); color:var(--text); }
+
+@keyframes pop{
+  from{ transform:translateY(6px) scale(.98); opacity:0; }
+  to{ transform:translateY(0) scale(1); opacity:1; }
+}
+
+/* =========================
+   Responsive
+========================= */
+@media (max-width: 560px){
+  .card{ padding:18px; }
+  .topbar{ padding:8px 10px; }
+  .btn{ min-width:110px; }
+}
+
+/* Utility */
+[hidden]{ display:none !important; }
