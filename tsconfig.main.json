@@ -1,0 +1,18 @@
+// tsconfig.main.json
+// Electron 전용 코드(main, preload 등) 빌드에만 사용
+// npm run build-main에만
+{
+  "compilerOptions": {
+    "target": "es2020",
+    "module": "commonjs",
+    "outDir": "dist",
+    "strict": true,
+    "esModuleInterop": true,
+    "moduleResolution": "node",
+    "resolveJsonModule": true,
+    "skipLibCheck": true
+  },
+  "include": [
+    "main/**/*"
+  ]
+}
