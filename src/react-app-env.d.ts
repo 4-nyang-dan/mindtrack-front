@@ -19,6 +19,8 @@ interface Window {
       body: string;
       headers: Record<string, string>;
     }>;
+    callJson: (path: string, init?: { method?: string; headers?: any; body?: any }) =>            // ✅ 추가
+        Promise<{ status: number; body: any; headers: Record<string, string> }>;
     upload: (
       path: string,
       file: { name: string; type: string; buffer: ArrayBuffer },
@@ -28,5 +30,12 @@ interface Window {
       body: string;
       headers: Record<string, string>;
     }>;
+
+    // SSE 관련
+      startSuggestionsStream: () => Promise<any>;
+      stopSuggestionsStream: () => Promise<any>;
+      onSuggestions: (cb: (payload: any) => void) => () => void;
+      onSseError: (cb: (msg: { status: number | null; message: string }) => void) => () => void;
+      onHeartbeat: (cb: (data: any) => void) => () => void;
   };
 }
