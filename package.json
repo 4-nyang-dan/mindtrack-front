@@ -6,7 +6,7 @@
   "scripts": {
     "start": "concurrently \"npm run start-react\" \"npm run start-electron\"",
     "start-react": "react-scripts start",
-    "start-electron": "wait-on http://localhost:3000 && electron .",
+    "start-electron": "wait-on http://localhost:3000 && npm run build-main && electron .",
     "build": "react-scripts build",
     "dist": "electron-builder",
     "build-main": "tsc --project tsconfig.main.json"
@@ -23,6 +23,7 @@
     }
   },
   "dependencies": {
+    "eventsource": "^2.0.2",
     "form-data": "^4.0.4",
     "keytar": "^7.9.0",
     "react": "^18.2.0",
