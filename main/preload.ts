@@ -46,11 +46,35 @@ contextBridge.exposeInMainWorld("api", {
   call: (path: string, init?: { method?: string; headers?: any; body?: any }) =>
     ipcRenderer.invoke("API_CALL", { path, init }),
 
+  callJson: (path: string, init?: { method?: string; headers?: any; body?: any }) =>
+    ipcRenderer.invoke("API_CALL_JSON", { path, init }),
+
   upload: (
     path: string,
     file: { name: string; type: string; buffer: ArrayBuffer },
     fields?: Record<string, string>
   ) => ipcRenderer.invoke("API_UPLOAD", { path, file, fields }),
+
+  // SSE 제어
+  startSuggestionsStream: () => ipcRenderer.invoke("SSE_START"),
+  stopSuggestionsStream:  () => ipcRenderer.invoke("SSE_STOP"),
+
+  // 리스너
+  onSuggestions: (handler: (payload: any) => void) => {
+    const fn = (_: any, data: any) => handler(data);
+    ipcRenderer.on("SSE_SUGGESTIONS", fn);
+    return () => ipcRenderer.removeListener("SSE_SUGGESTIONS", fn);
+  },
+  onSseError: (cb: (msg: { status: number | null; message: string }) => void) => {
+    const fn = (_: any, data: any) => cb(data);
+    ipcRenderer.on("SSE_ERROR", fn);
+    return () => ipcRenderer.removeListener("SSE_ERROR", fn);
+  },
+  onHeartbeat: (handler: (d: { ts: number }) => void) => {
+    const fn = (_: any, data: any) => handler(data);
+    ipcRenderer.on("SSE_HEARTBEAT", fn);
+    return () => ipcRenderer.removeListener("SSE_HEARTBEAT", fn);
+  },
 });
 
 

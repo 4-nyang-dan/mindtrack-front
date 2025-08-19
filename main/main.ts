@@ -1,4 +1,4 @@
-import { app, BrowserWindow, ipcMain, desktopCapturer, screen } from "electron";
+import { app, BrowserWindow, ipcMain, desktopCapturer, screen, webContents  } from "electron";
 import * as path from "path";
 import * as fs from "fs";
 import keytar from "keytar";
@@ -16,6 +16,62 @@ ipcMain.on("LOG_TO_MAIN", (_e, message) => {
 
 // -------------------- 인증 토큰 --------------------
 let accessToken: string | null = null;
+
+
+// ----------- sse 구독 읽어오기 위한 Stream설정
+type Stream = { es: any; clients: Set<number> };
+let sseStream: Stream | null = null;
+const EventSourceModule = require("eventsource");
+
+console.log("typeof EventSourceModule:", typeof EventSourceModule);
+console.log("EventSourceModule keys:", Object.keys(EventSourceModule));
+console.log("EventSourceModule.default:", typeof EventSourceModule.default);
+
+function startSse() {
+  if (sseStream) return;
+
+  const es = new EventSourceModule(`${API_BASE}/api/suggestions/stream?token=${accessToken}`);
+
+  es.addEventListener("suggestions", (ev: any) => {
+    try {
+      const payload = JSON.parse(ev.data);
+      if (!sseStream) return;
+      for (const wcId of sseStream.clients) {
+        webContents.fromId(wcId)?.send("SSE_SUGGESTIONS", payload);
+      }
+    } catch (e) {
+      console.error("[SSE parse]", e);
+    }
+  });
+
+  es.addEventListener("heartbeat", () => {
+    if (!sseStream) return;
+    for (const wcId of sseStream.clients) {
+      webContents.fromId(wcId)?.send("SSE_HEARTBEAT", { ts: Date.now() });
+    }
+  });
+
+  es.onerror = (err: any) => {
+    console.warn("[SSE error]", err);
+    if (!sseStream) return;
+    for (const wcId of sseStream.clients) {
+      webContents.fromId(wcId)?.send("SSE_ERROR", {
+        status: err?.status || null,
+        message: err?.message || String(err)
+      });
+    }
+  };
+
+  sseStream = { es, clients: new Set() };
+}
+
+function stopSseIfNoClients() {
+  if (sseStream && sseStream.clients.size === 0) {
+    try { sseStream.es.close(); } catch {}
+    sseStream = null;
+  }
+}
+
 
 // -------------------- 공통 fetch --------------------
 async function apiFetch(pathname: string, init: any = {}) {
@@ -36,7 +92,7 @@ async function apiFetch(pathname: string, init: any = {}) {
     body = JSON.stringify(body);
   }
 
-  return fetch(`${API_BASE}${pathname}`, { ...init, headers, body });
+  return fetch(`${API_BASE}${pathname}`, { ...init, headers, body});
 }
 
 // -------------------- 캡처 --------------------
@@ -81,12 +137,22 @@ ipcMain.handle("AUTH_LOGIN", async (_e, body: { userId: string; password: string
   if (!r.ok) throw new Error(d?.message || `Login failed: ${r.status}`);
 
   accessToken = d.token || null;
-  console.log("[main] 로그인 완료 → accessToken 세팅");
+
+  //토큰 바뀌면 SSE를 재연결
+  if(sseStream){
+    try { sseStream.es.close(); } catch {}
+    sseStream = null;
+  }
+  console.log("[main] 로그인 완료 → accessToken 세팅", accessToken);
   return d;
 });
 
 ipcMain.handle("AUTH_LOGOUT", async () => {
   accessToken = null;
+  if (sseStream) {
+    try { sseStream.es.close(); } catch {}
+    sseStream = null;
+  }
   return { ok: true };
 });
 
@@ -95,6 +161,14 @@ ipcMain.handle("API_CALL", async (_e, { path, init }) => {
   const r = await apiFetch(path, init || {});
   const text = await r.text();
   return { status: r.status, body: text, headers: Object.fromEntries(r.headers.entries()) };
+});
+
+ipcMain.handle("API_CALL_JSON", async(_e, {path, init}) => {
+  const r = await apiFetch(path, init || {});
+  const text = await r.text();
+  const ct = r.headers.get("content-type") || "";
+  const body = ct.includes("application/json") ? JSON.parse(text || "{}") : text;
+  return { status: r.status, body, headers: Object.fromEntries(r.headers.entries())};
 });
 
 ipcMain.handle("API_UPLOAD", async (_e, { path, file, fields }: { path: string; file: { name: string; type?: string; buffer: ArrayBuffer }; fields?: Record<string, string> }) => {
@@ -109,6 +183,20 @@ ipcMain.handle("API_UPLOAD", async (_e, { path, file, fields }: { path: string; 
 
   console.log("[API_UPLOAD] accessToken:", accessToken);
   return { status: r.status, body: text, headers: Object.fromEntries(r.headers.entries()) };
+});
+
+ipcMain.handle("SSE_START", async (e) => {
+  startSse();
+  if (sseStream) sseStream.clients.add(e.sender.id);
+  return { ok: true };
+});
+
+ipcMain.handle("SSE_STOP", async (e) => {
+  if (sseStream) {
+    sseStream.clients.delete(e.sender.id);
+    stopSseIfNoClients();
+  }
+  return { ok: true };
 });
 
 // -------------------- 창 생성 --------------------

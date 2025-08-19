@@ -36,6 +36,26 @@ electron_1.contextBridge.exposeInMainWorld("capture", {
  */
 electron_1.contextBridge.exposeInMainWorld("api", {
     call: (path, init) => electron_1.ipcRenderer.invoke("API_CALL", { path, init }),
+    callJson: (path, init) => electron_1.ipcRenderer.invoke("API_CALL_JSON", { path, init }),
     upload: (path, file, fields) => electron_1.ipcRenderer.invoke("API_UPLOAD", { path, file, fields }),
+    // SSE 제어
+    startSuggestionsStream: () => electron_1.ipcRenderer.invoke("SSE_START"),
+    stopSuggestionsStream: () => electron_1.ipcRenderer.invoke("SSE_STOP"),
+    // 리스너
+    onSuggestions: (handler) => {
+        const fn = (_, data) => handler(data);
+        electron_1.ipcRenderer.on("SSE_SUGGESTIONS", fn);
+        return () => electron_1.ipcRenderer.removeListener("SSE_SUGGESTIONS", fn);
+    },
+    onSseError: (cb) => {
+        const fn = (_, data) => cb(data);
+        electron_1.ipcRenderer.on("SSE_ERROR", fn);
+        return () => electron_1.ipcRenderer.removeListener("SSE_ERROR", fn);
+    },
+    onHeartbeat: (handler) => {
+        const fn = (_, data) => handler(data);
+        electron_1.ipcRenderer.on("SSE_HEARTBEAT", fn);
+        return () => electron_1.ipcRenderer.removeListener("SSE_HEARTBEAT", fn);
+    },
 });
 console.log("[preload] loaded");
