@@ -7,6 +7,7 @@ import SignupForm from "./components/auth/SignupForm";
 import LoginForm from "./components/auth/LoginForm";
 import CaptureControls from "./components/CaptureControls";
 import { useScreenshot } from "./hooks/useScreenshot";
+import SuggestionsOverlay from "./components/SuggestionOverlay";
 
 /** 회원가입 모달 (Portal) */
 function SignupDialog({
@@ -90,6 +91,7 @@ function Main() {
 
   return (
     <div className="app-shell" style={{ alignContent: "start" }}>
+      <SuggestionsOverlay />
       <div className="topbar">
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
           <div className="logo" />
