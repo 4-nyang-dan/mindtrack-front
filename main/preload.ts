@@ -12,7 +12,10 @@ contextBridge.exposeInMainWorld("auth", {
  
 });
 
-
+contextBridge.exposeInMainWorld("appWindow", {
+  getBounds: () => ipcRenderer.invoke("APP_GET_BOUNDS"),
+  getDevicePixelRatio: () => window.devicePixelRatio || 1,
+});
 
 // 렌더러에게 받은 캡처 요청을 ipc를 통해 메인 프로세스에게 전달.
 /*contextBridge.exposeInMainWorld("capture", {

@@ -6,6 +6,10 @@ import keytar from "keytar";
 const API_BASE = process.env.API_BASE ?? "http://localhost:8080";
 const APP_NAME = "MindTrack";
 
+const SIZE_AUTH = { width: 1000, height: 700 };
+const SIZE_RENDER = { width: 560, height: 120 };
+
+
 const SAVE_DIR = path.join(__dirname, "../screenshots");
 if (!fs.existsSync(SAVE_DIR)) fs.mkdirSync(SAVE_DIR, { recursive: true });
 
@@ -51,8 +55,8 @@ ipcMain.handle("GET_SCREENSHOT", async () => {
   const pngBuffer = sources[0].thumbnail.toPNG();
   const base64 = pngBuffer.toString("base64");
 
-  const filePath = path.join(SAVE_DIR, `screenshot-${Date.now()}.png`);
-  fs.writeFileSync(filePath, pngBuffer);
+  //const filePath = path.join(SAVE_DIR, `screenshot-${Date.now()}.png`);
+  //fs.writeFileSync(filePath, pngBuffer);
 
   return `data:image/png;base64,${base64}`;
 });
@@ -112,14 +116,78 @@ ipcMain.handle("API_UPLOAD", async (_e, { path, file, fields }: { path: string; 
 });
 
 // -------------------- 창 생성 --------------------
+
+let win: BrowserWindow | null = null;
+
 function createWindow() {
   const preloadPath = app.isPackaged
     ? path.join(__dirname, "preload.js")
     : path.join(__dirname, "../dist/preload.js");
 
+  win = new BrowserWindow({
+    ...SIZE_AUTH,       // 처음엔 로그인/회원가입용 큰 창
+    frame: true,
+    resizable: true,
+    backgroundColor: "#0b0d10",
+    webPreferences: {
+      preload: preloadPath,
+      contextIsolation: true,
+      nodeIntegration: false,
+      sandbox: false,
+    },
+  });
+
+  win.loadURL("http://localhost:3000");
+  win.webContents.openDevTools();
+}
+
+// -------------------- IPC: 모드 전환 --------------------
+ipcMain.handle("APP:ENTER_RENDER_MODE", () => {
+  if (!win) return;
+  win.setBounds({ x: 10, y: 10, width: SIZE_RENDER.width, height: SIZE_RENDER.height });
+  win.setAlwaysOnTop(true, "floating");
+  win.setIgnoreMouseEvents(false);
+  win.setResizable(false);
+  win.setHasShadow(false);
+  win.setBackgroundColor("#00000000");
+  win.setOpacity(1);
+  win.setFullScreenable(false);
+  win.setMenuBarVisibility(false);
+  win.setVisibleOnAllWorkspaces(true);
+  win.setSkipTaskbar(true);
+  win.setFocusable(true);
+});
+
+ipcMain.handle("APP:EXIT_RENDER_MODE", () => {
+  if (!win) return;
+  win.setBounds({ width: SIZE_AUTH.width, height: SIZE_AUTH.height, x: 100, y: 100 });
+  win.setAlwaysOnTop(false);
+  win.setResizable(true);
+  win.setHasShadow(true);
+  win.setBackgroundColor("#0b0d10");
+  win.setSkipTaskbar(false);
+});
+
+
+
+/*function createWindow() {
+  const preloadPath = app.isPackaged
+    ? path.join(__dirname, "preload.js")
+    : path.join(__dirname, "../dist/preload.js");
+
   const win = new BrowserWindow({
-    width: 1000,
-    height: 700,
+    width: 560,
+    height: 120,
+    x: 10,
+    y: 10,
+    frame: false,                     // ✅ 프레임 제거
+    transparent: true,                // ✅ 투명 창
+    backgroundColor: "#00000000",     // ✅ 완전 투명
+    resizable: false,
+    movable: true,
+    alwaysOnTop: true,                // ✅ 항상 위
+    skipTaskbar: true,                // 작업표시줄 숨김(원하면 제거)
+    hasShadow: false,
     webPreferences: {
       preload: preloadPath,
       contextIsolation: true,
@@ -129,7 +197,7 @@ function createWindow() {
   });
   win.loadURL("http://localhost:3000");
   win.webContents.openDevTools();
-}
+}*/
 
 app.whenReady().then(createWindow);
 app.on("window-all-closed", () => {

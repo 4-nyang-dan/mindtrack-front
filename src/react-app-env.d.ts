@@ -4,6 +4,12 @@ interface Window {
     getScreenshot: () => Promise<string>;
     logToMain: (msg: string) => void;
   };
+  
+  appStage: {
+      enterRenderOnly: (opts?: { alwaysOnTop?: boolean; frameless?: boolean }) => Promise<void>;
+      exitRenderOnly: () => Promise<void>;
+  };
+
   auth: {
     signup: (userId: string, email: string, password: string) => Promise<{ userId: string; email: string; token: string }>;
     login: (userId: string, password: string) => Promise<{ userId: string; email: string; token: string }>;

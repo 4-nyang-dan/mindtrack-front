@@ -9,6 +9,10 @@ electron_1.contextBridge.exposeInMainWorld("auth", {
     login: (userId, password) => electron_1.ipcRenderer.invoke("AUTH_LOGIN", { userId, password }),
     logout: () => electron_1.ipcRenderer.invoke("AUTH_LOGOUT"),
 });
+electron_1.contextBridge.exposeInMainWorld("appWindow", {
+    getBounds: () => electron_1.ipcRenderer.invoke("APP_GET_BOUNDS"),
+    getDevicePixelRatio: () => window.devicePixelRatio || 1,
+});
 // 렌더러에게 받은 캡처 요청을 ipc를 통해 메인 프로세스에게 전달.
 /*contextBridge.exposeInMainWorld("capture", {
   getScreenshot: async () => {
