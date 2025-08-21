@@ -4,9 +4,6 @@ import type { SuggestionPayload } from "../types/suggestion";
 // 스위치: 나중에 'backend' 또는 'ai'로 바꾸면 됨
 //const SOURCE: "mock" | "backend" | "ai" = "mock";
 
-// 백엔드 엔드포인트(예시). 실제 주소/토큰 정해지면 수정
-const BACKEND_BASE = "http://localhost:8080";
-
 // 일단 mock/suggestion.json읽어오기
 //export async function fetchMock(): Promise<SuggestionPayload | null> {
 //  const res = await fetch("/mock/test.json", { cache: "no-store" });
@@ -20,6 +17,8 @@ const BACKEND_BASE = "http://localhost:8080";
  */
 export async function fetchLatestSuggestions(): Promise<SuggestionPayload | null> {
   const r = await window.api.call(`/api/suggestions/latest`, { method: "GET" });
-  if (r.status !== 200) return null;
+  if (r.status !== 200) {
+    throw new Error(`fetch latest top3 question failed: ${r.status} ${r.body}`);
+  }
   return JSON.parse(r.body) as SuggestionPayload;
 }
