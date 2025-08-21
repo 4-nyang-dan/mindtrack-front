@@ -26,6 +26,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const electron_1 = require("electron");
 const path = __importStar(require("path"));
 const fs = __importStar(require("fs"));
+const promises_1 = require("timers/promises");
 const API_BASE = process.env.API_BASE ?? "http://localhost:8080";
 const APP_NAME = "MindTrack";
 const SAVE_DIR = path.join(__dirname, "../screenshots");
@@ -42,19 +43,22 @@ const EventSourceModule = require("eventsource");
 console.log("typeof EventSourceModule:", typeof EventSourceModule);
 console.log("EventSourceModule keys:", Object.keys(EventSourceModule));
 console.log("EventSourceModule.default:", typeof EventSourceModule.default);
-const EventSource = EventSourceModule.default;
 function startSse() {
-    if (sseStream)
+    if (sseStream || !accessToken) {
+        console.warn("[SSE] connect try failed: accessToken not found");
         return;
-    console.log("[main] accessToken:", accessToken);
+    }
+    console.log("[SSE] connect start: token =", accessToken);
     const es = new EventSourceModule(`${API_BASE}/api/suggestions/stream?token=${accessToken}`);
     es.addEventListener("suggestions", (ev) => {
         try {
             const payload = JSON.parse(ev.data);
-            if (!sseStream)
-                return;
+            if (!sseStream) {
+                throw new Error(`sse suggestions failed: sseStream is null`);
+            }
             for (const wcId of sseStream.clients) {
                 electron_1.webContents.fromId(wcId)?.send("SSE_SUGGESTIONS", payload);
+                console.log("[SSE] suggestion detection: payload:", payload);
             }
         }
         catch (e) {
@@ -62,8 +66,9 @@ function startSse() {
         }
     });
     es.addEventListener("heartbeat", () => {
-        if (!sseStream)
-            return;
+        if (!sseStream) {
+            throw new Error(`sse suggestions failed: sseStream is null`);
+        }
         for (const wcId of sseStream.clients) {
             electron_1.webContents.fromId(wcId)?.send("SSE_HEARTBEAT", { ts: Date.now() });
         }
@@ -122,6 +127,11 @@ electron_1.ipcMain.handle("GET_SCREENSHOT", async () => {
     const base64 = pngBuffer.toString("base64");
     const filePath = path.join(SAVE_DIR, `screenshot-${Date.now()}.png`);
     fs.writeFileSync(filePath, pngBuffer);
+    // N초 뒤 자동 삭제
+    (async () => {
+        await (0, promises_1.setTimeout)(30000); // 30초
+        fs.promises.unlink(filePath).catch(() => { });
+    })();
     return `data:image/png;base64,${base64}`;
 });
 // -------------------- 인증 --------------------
@@ -155,6 +165,7 @@ electron_1.ipcMain.handle("AUTH_LOGIN", async (_e, body) => {
         catch { }
         sseStream = null;
     }
+    startSse();
     console.log("[main] 로그인 완료 → accessToken 세팅", accessToken);
     return d;
 });
@@ -167,6 +178,7 @@ electron_1.ipcMain.handle("AUTH_LOGOUT", async () => {
         catch { }
         sseStream = null;
     }
+    stopSseIfNoClients();
     return { ok: true };
 });
 // -------------------- API 프록시 --------------------
