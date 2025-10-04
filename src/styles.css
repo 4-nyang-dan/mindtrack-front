@@ -256,9 +256,15 @@ button:focus-visible{ box-shadow:var(--focus); }
    Responsive
 ========================= */
 @media (max-width: 560px){
-  .card{ padding:18px; }
+  .card{ padding:12px; }
   .topbar{ padding:8px 10px; }
   .btn{ min-width:110px; }
+}
+
+
+html, body, #root {
+  height: 100%;
+  overflow-x: hidden;
 }
 
 /* Utility */

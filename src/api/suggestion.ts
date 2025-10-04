@@ -20,5 +20,17 @@ export async function fetchLatestSuggestions(): Promise<SuggestionPayload | null
   if (r.status !== 200) {
     throw new Error(`fetch latest top3 question failed: ${r.status} ${r.body}`);
   }
-  return JSON.parse(r.body) as SuggestionPayload;
+  const data = JSON.parse(r.body) as SuggestionPayload;
+
+  // analysisResult 가 JSON string이라면 파싱
+  if (typeof (data as any).analysisResult === "string") {
+    try {
+      const parsed = JSON.parse((data as any).analysisResult);
+      return { ...data, ...parsed };
+    } catch {
+      return data;
+    }
+  }
+
+  return data;
 }

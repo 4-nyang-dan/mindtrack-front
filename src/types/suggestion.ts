@@ -1,13 +1,17 @@
-//타입 정의
-export type Suggestion = {
+// types/suggestion.ts
+export interface Suggestion {
   id: string;
   question: string;
-  answer: string;
-  confidence?: number; // AI 모델이 이 질문/답변이 현재 상황과 얼마나 관련 있다고 생각하는가
-};
+  answer?: string;
+  confidence?: number;
+}
 
-export type SuggestionPayload = {
-  userId: string;
-  createdAt: string; // ISO
-  suggestions: Suggestion[];
-};
+export interface SuggestionPayload {
+  createdAt?: number | string;
+  suggestions?: Suggestion[];
+
+  // AI 추가 필드
+  description?: string;               // 현재 상황 요약
+  predicted_actions?: string[];       // 앞으로 할 일
+  predicted_questions?: string[];     // 예상 질문
+}
