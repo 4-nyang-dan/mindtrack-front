@@ -16,7 +16,11 @@ function normalizeAnswer(raw: unknown): NormalizedAnswer {
   if (typeof raw === "string") {
     str = raw.trim();
   } else {
-    try { str = JSON.stringify(raw); } catch { str = String(raw); }
+    try {
+      str = JSON.stringify(raw);
+    } catch {
+      str = String(raw);
+    }
   }
 
   // 1) JSON 형태면 파싱
@@ -75,12 +79,12 @@ export default function SuggestionsOverlay({}) {
 
   // 선택 유지/해제
   useEffect(() => {
-    if (selectedId && !top3.some(s => s.id === selectedId)) {
+    if (selectedId && !top3.some((s) => s.id === selectedId)) {
       setSelectedId(null);
     }
   }, [top3, selectedId]);
 
-  const selected = top3.find(s => s.id === selectedId) || null;
+  const selected = top3.find((s) => s.id === selectedId) || null;
 
   // 질문 변경 시 접기 초기화 (항상 호출되는 hook)
   useEffect(() => {
@@ -103,12 +107,33 @@ export default function SuggestionsOverlay({}) {
       : normalized.text;
 
   // ⛳ 이제야 조건부 렌더 (모든 훅 호출이 끝난 뒤)
-  if (top3.length === 0) {
+  if (!payload) {
     return <div style={wrap}>분석 결과를 준비 중…</div>;
   }
 
   return (
     <div style={wrap}>
+      {/* ✅ 새로운 블록: 현재 상황 설명 */}
+      {payload.description && (
+        <>
+          <div style={header}>현재 상황</div>
+          <div style={descBox}>{payload.description}</div>
+        </>
+      )}
+
+      {/* ✅ 새로운 블록: 예측된 행동 */}
+      {payload.predicted_actions && payload.predicted_actions.length > 0 && (
+        <>
+          <div style={header}>앞으로 이런 일이 일어날 수 있어요</div>
+          <ul style={listBox}>
+            {payload.predicted_actions.map((a, i) => (
+              <li key={i}>{a}</li>
+            ))}
+          </ul>
+        </>
+      )}
+
+      {/* 기존 질문/답변 UI */}
       <div style={header}>혹시 지금 이걸 고민 중이신가요?</div>
 
       {error && (
@@ -118,10 +143,12 @@ export default function SuggestionsOverlay({}) {
       )}
 
       <div style={pillRow}>
-        {top3.map(q => (
+        {top3.map((q) => (
           <button
             key={q.id}
-            onClick={() => setSelectedId(prev => (prev === q.id ? null : q.id))}
+            onClick={() =>
+              setSelectedId((prev) => (prev === q.id ? null : q.id))
+            }
             style={{
               ...pill,
               border:
@@ -130,7 +157,11 @@ export default function SuggestionsOverlay({}) {
                   : "1px solid rgba(255,255,255,0.25)",
               opacity: selected?.id === q.id ? 1 : 0.85,
             }}
-            title={q.confidence != null ? `신뢰도 ${((q.confidence * 100) | 0)}%` : undefined}
+            title={
+              q.confidence != null
+                ? `신뢰도 ${((q.confidence * 100) | 0)}%`
+                : undefined
+            }
           >
             {q.question}
           </button>
@@ -174,10 +205,62 @@ const wrap: React.CSSProperties = {
   userSelect: "text",
   zIndex: 99999,
 };
-const header: React.CSSProperties = { fontWeight: 700, marginBottom: 8, opacity: 0.9 };
-const pillRow: React.CSSProperties = { display: "flex", gap: 8, marginBottom: 8, flexWrap: "wrap" };
-const pill: React.CSSProperties = { borderRadius: 999, padding: "6px 10px", background: "rgba(255,255,255,0.08)", color: "#fff", cursor: "pointer" };
-const answerBox: React.CSSProperties = { background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.15)", borderRadius: 10, padding: 10, maxHeight: 180, overflow: "auto" };
-const footer: React.CSSProperties = { marginTop: 8, fontSize: 11, opacity: 0.7 };
-const hintBox: React.CSSProperties = { background: "rgba(255,255,255,0.06)", border: "1px dashed rgba(255,255,255,0.25)", borderRadius: 10, padding: 10, fontSize: 12, opacity: 0.85 };
-const errorBox: React.CSSProperties = { background: "rgba(255,0,0,0.12)", border: "1px solid rgba(255,0,0,0.35)", borderRadius: 10, padding: 10, fontSize: 12 };
+const header: React.CSSProperties = {
+  fontWeight: 700,
+  marginBottom: 8,
+  opacity: 0.9,
+};
+const descBox: React.CSSProperties = {
+  background: "rgba(255,255,255,0.06)",
+  border: "1px solid rgba(255,255,255,0.15)",
+  borderRadius: 10,
+  padding: 10,
+  marginBottom: 12,
+  fontSize: 13,
+};
+const listBox: React.CSSProperties = {
+  marginBottom: 12,
+  paddingLeft: 16,
+  fontSize: 13,
+};
+const pillRow: React.CSSProperties = {
+  display: "flex",
+  gap: 8,
+  marginBottom: 8,
+  flexWrap: "wrap",
+};
+const pill: React.CSSProperties = {
+  borderRadius: 999,
+  padding: "6px 10px",
+  background: "rgba(255,255,255,0.08)",
+  color: "#fff",
+  cursor: "pointer",
+};
+const answerBox: React.CSSProperties = {
+  background: "rgba(255,255,255,0.06)",
+  border: "1px solid rgba(255,255,255,0.15)",
+  borderRadius: 10,
+  padding: 10,
+  maxHeight: 180,
+  overflow: "auto",
+};
+const footer: React.CSSProperties = {
+  marginTop: 8,
+  fontSize: 11,
+  opacity: 0.7,
+};
+const hintBox: React.CSSProperties = {
+  background: "rgba(255,255,255,0.06)",
+  border: "1px dashed rgba(255,255,255,0.25)",
+  borderRadius: 10,
+  padding: 10,
+  fontSize: 12,
+  opacity: 0.85,
+};
+const errorBox: React.CSSProperties = {
+  background: "rgba(255,0,0,0.12)",
+  border: "1px solid rgba(255,0,0,0.35)",
+  borderRadius: 10,
+  padding: 10,
+  fontSize: 12,
+};

@@ -224,9 +224,21 @@ function createWindow() {
     const preloadPath = electron_1.app.isPackaged
         ? path.join(__dirname, "preload.js")
         : path.join(__dirname, "../dist/preload.js");
+    const winWidth = 512;
+    const winHeight = 999;
+    const primaryDisplay = electron_1.screen.getPrimaryDisplay();
+    const { x: displayX, y: displayY, width: displayWidth, height: displayHeight } = primaryDisplay.workArea;
+    // 오른쪽 끝 정렬
+    const winX = displayX + displayWidth - winWidth;
+    const winY = displayY; // 화면의 맨 위
     const win = new electron_1.BrowserWindow({
-        width: 1000,
-        height: 700,
+        x: winX,
+        y: winY,
+        width: winWidth,
+        height: winHeight,
+        resizable: false,
+        maximizable: false,
+        fullscreenable: false,
         webPreferences: {
             preload: preloadPath,
             contextIsolation: true,
@@ -234,6 +246,8 @@ function createWindow() {
             sandbox: false,
         },
     });
+    win.setMenuBarVisibility(false);
+    win.removeMenu();
     win.loadURL("http://localhost:3000");
     win.webContents.openDevTools();
 }
