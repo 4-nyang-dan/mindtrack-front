@@ -18,6 +18,7 @@ export default function LoginForm() {
     try {
       const r = await window.auth.login(userId, password);
       setUser({ userId: r.userId, email: r.email, token: r.token });
+      localStorage.setItem("token", r.token);
     } catch (e: any) {
       setError(e?.message || "로그인에 실패했습니다.");
     } finally {
