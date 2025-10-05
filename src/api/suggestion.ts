@@ -17,6 +17,7 @@ import type { SuggestionPayload } from "../types/suggestion";
  */
 export async function fetchLatestSuggestions(): Promise<SuggestionPayload | null> {
   const r = await window.api.call(`/api/suggestions/latest`, { method: "GET" });
+  //const r = await window.api.call(`/api/suggestions/latest`, { method: "GET" });
   if (r.status !== 200) {
     throw new Error(`fetch latest top3 question failed: ${r.status} ${r.body}`);
   }
