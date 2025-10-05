@@ -44,11 +44,9 @@ const EventSourceModule = require("eventsource");
 console.log("typeof EventSourceModule:", typeof EventSourceModule);
 console.log("EventSourceModule keys:", Object.keys(EventSourceModule));
 console.log("EventSourceModule.default:", typeof EventSourceModule.default);
-const EventSource = EventSourceModule.default;
 function startSse() {
     if (sseStream)
         return;
-    console.log("[main] accessToken:", accessToken);
     const es = new EventSourceModule(`${API_BASE}/api/suggestions/stream?token=${accessToken}`);
     es.addEventListener("suggestions", (ev) => {
         try {

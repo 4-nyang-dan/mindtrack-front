@@ -1,7 +1,7 @@
 import { app, BrowserWindow, ipcMain, desktopCapturer, screen, webContents  } from "electron";
 import * as path from "path";
 import * as fs from "fs";
-import keytar from "keytar";
+
 
 const API_BASE = process.env.API_BASE ?? "http://localhost:8080";
 const APP_NAME = "MindTrack";

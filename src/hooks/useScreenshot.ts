@@ -13,7 +13,7 @@ declare global {
   }
 }
 
-const SSIM_THRESHOLD = 0.9;
+const SSIM_THRESHOLD = 0.95;
 const INTERVAL_MS = 1500; // 1.5초 주기
 
 export function useScreenshot() {
