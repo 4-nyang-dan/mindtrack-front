@@ -1,4 +1,7 @@
-// types/suggestion.ts
+export interface PredictedQuestion {
+  question: string;
+}
+
 export interface Suggestion {
   id: string;
   question: string;
@@ -10,8 +13,8 @@ export interface SuggestionPayload {
   createdAt?: number | string;
   suggestions?: Suggestion[];
 
-  // AI 추가 필드
-  description?: string;               // 현재 상황 요약
-  predicted_actions?: string[];       // 앞으로 할 일
-  predicted_questions?: string[];     // 예상 질문
+  // AI 필드
+  description?: string;
+  predicted_actions?: string[];
+  predicted_questions?: (string | PredictedQuestion)[]; // ✅ 둘 다 허용
 }
