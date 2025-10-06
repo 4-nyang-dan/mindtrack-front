@@ -225,7 +225,7 @@ function createWindow() {
         ? path.join(__dirname, "preload.js")
         : path.join(__dirname, "../dist/preload.js");
     const winWidth = 512;
-    const winHeight = 999;
+    const winHeight = 1200;
     const primaryDisplay = electron_1.screen.getPrimaryDisplay();
     const { x: displayX, y: displayY, width: displayWidth, height: displayHeight } = primaryDisplay.workArea;
     // 오른쪽 끝 정렬

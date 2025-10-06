@@ -1,16 +1,22 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import ReactDOM from "react-dom";
 import "./styles.css";
 import { AuthProvider, useAuth } from "./components/auth/AuthContext";
 import SignupForm from "./components/auth/SignupForm";
 import LoginForm from "./components/auth/LoginForm";
 import { useScreenshot } from "./hooks/useScreenshot";
-import { fetchLatestSuggestions } from "./api/suggestion"; // ✅ 파일명 주의!
-import type { SuggestionPayload } from "./types/suggestion";
+import { useSuggestions } from "./hooks/useSuggestion"; // ✅ SSE는 여기서 받음
+import SuggestionReplace from "./components/SuggestionReplace"; // ✅ 결과 표시
 
 /* 회원가입 모달 */
-function SignupDialog({ open, onClose }: { open: boolean; onClose: () => void }) {
-  useEffect(() => {
+function SignupDialog({
+  open,
+  onClose,
+}: {
+  open: boolean;
+  onClose: () => void;
+}) {
+  React.useEffect(() => {
     if (!open) return;
     const onKey = (e: KeyboardEvent) => e.key === "Escape" && onClose();
     window.addEventListener("keydown", onKey);
@@ -25,7 +31,12 @@ function SignupDialog({ open, onClose }: { open: boolean; onClose: () => void })
   if (!open) return null;
 
   return ReactDOM.createPortal(
-    <div className="modal-overlay" role="dialog" aria-modal="true" aria-label="회원가입">
+    <div
+      className="modal-overlay"
+      role="dialog"
+      aria-modal="true"
+      aria-label="회원가입"
+    >
       <div className="overlay-bg" onClick={onClose} />
       <div className="card modal-card" onClick={(e) => e.stopPropagation()}>
         <div className="header">
@@ -70,29 +81,10 @@ function AuthCard() {
 function Main() {
   const { user, setUser } = useAuth();
   const { startCapture, stopCapture } = useScreenshot();
+  const { payload: analysisData, error } = useSuggestions(); // ✅ SSE 수신
 
   const [input, setInput] = useState("");
   const [sending, setSending] = useState(false);
-  const [analysisData, setAnalysisData] = useState<SuggestionPayload | null>(null);
-
-  // ✅ 최신 suggestion 주기적으로 가져오기
-  useEffect(() => {
-    let timer: any;
-
-    const load = async () => {
-      try {
-        const data = await fetchLatestSuggestions();
-        console.log("✅ 최신 SuggestionPayload:", data);
-        if (data) setAnalysisData(data);
-      } catch (e) {
-        console.error("load error", e);
-      }
-    };
-
-    load();
-    timer = setInterval(load, 5000);
-    return () => clearInterval(timer);
-  }, []);
 
   async function handleSend() {
     const text = input.trim();
@@ -134,11 +126,6 @@ function Main() {
       </div>
     );
   }
-
-  // ✅ SuggestionPayload에서 UI로 매핑
-  const description = analysisData?.description ?? "분석 중...";
-  const actions = analysisData?.predicted_actions ?? [];
-  const questions = analysisData?.predicted_questions ?? [];
 
   const MAX_W = 520;
   const TOPBAR_H = 64;
@@ -234,7 +221,6 @@ function Main() {
                 padding: "10px 20px",
                 fontWeight: 600,
                 cursor: "pointer",
-                boxShadow: "0 2px 5px rgba(0,0,0,0.1)",
               }}
             >
               ▶ 실행
@@ -247,7 +233,6 @@ function Main() {
                 padding: "10px 20px",
                 fontWeight: 600,
                 cursor: "pointer",
-                boxShadow: "0 2px 5px rgba(0,0,0,0.1)",
               }}
             >
               ⟳ 업데이트
@@ -260,9 +245,8 @@ function Main() {
                 borderRadius: 12,
                 padding: "10px 20px",
                 fontWeight: 600,
-                cursor: "pointer",
                 color: "#e00",
-                boxShadow: "0 2px 5px rgba(0,0,0,0.1)",
+                cursor: "pointer",
               }}
             >
               ■ 정지
@@ -270,69 +254,11 @@ function Main() {
           </div>
         </section>
 
-        {/* 사용자 현재 상황 */}
-        <section className="card">
-          <h3>사용자 현재 상황</h3>
-          <p>
-            <strong>{description}</strong>
-          </p>
-        </section>
-
-        {/* 앞으로 이런 일도 할 것인가요? */}
-        <section className="card">
-          <h3>앞으로 이런 일도 할 것인가요?</h3>
-          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-            {(actions.length > 0 ? actions : Array(3).fill(null)).map((a, i) => (
-              <div
-                key={i}
-                style={{
-                  background: a
-                    ? "linear-gradient(90deg, #eef7ff 0%, #d7ecff 100%)"
-                    : "rgba(230,240,255,0.5)",
-                  border: "1px solid rgba(180,200,230,0.5)",
-                  borderRadius: 8,
-                  padding: "10px 12px",
-                  minHeight: 40,
-                  color: a ? "#000" : "rgba(0,0,0,0.3)",
-                  fontSize: 14,
-                  transition: "all 0.4s ease",
-                }}
-              >
-                {a || ""}
-              </div>
-            ))}
-          </div>
-        </section>
-
-        {/* 혹시 이런 것이 궁금하신가요? */}
-        <section className="card">
-          <h3>혹시 이런 것이 궁금하신가요?</h3>
-          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-            {(questions.length > 0 ? questions : Array(3).fill(null)).map((q, i) => (
-              <button
-                key={i}
-                disabled={!q}
-                onClick={() => handleQuestionClick(q!)}
-                style={{
-                  background: q
-                    ? "linear-gradient(90deg, #fdfcff 0%, #f1f4ff 100%)"
-                    : "rgba(245,245,255,0.6)",
-                  border: "1px solid rgba(200,200,230,0.4)",
-                  borderRadius: 8,
-                  padding: "10px 12px",
-                  minHeight: 40,
-                  color: q ? "#000" : "rgba(0,0,0,0.3)",
-                  fontSize: 14,
-                  textAlign: "left",
-                  width: "100%",
-                  cursor: q ? "pointer" : "default",
-                }}
-              >
-                {q || ""}
-              </button>
-            ))}
-          </div>
-        </section>
+        {/* ✅ SSE로 받은 분석 결과 표시 */}
+        <SuggestionReplace
+          payload={analysisData}
+          onQuestionClick={handleQuestionClick}
+        />
 
         {/* 질문 입력 */}
         <section className="card">

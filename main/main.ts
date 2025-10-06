@@ -225,7 +225,7 @@ function createWindow() {
     : path.join(__dirname, "../dist/preload.js");
 
   const winWidth = 512;
-  const winHeight = 999;
+  const winHeight = 1200;
   const primaryDisplay = screen.getPrimaryDisplay();
 
   const { x: displayX, y: displayY, width: displayWidth, height: displayHeight } = primaryDisplay.workArea;
