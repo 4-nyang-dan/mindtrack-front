@@ -194,7 +194,7 @@ ipcMain.handle("API_UPLOAD", async (_e, { path, file, fields }: { path: string; 
   const form = new FormData();
   if (fields) for (const [k, v] of Object.entries(fields)) form.append(k, v);
 
-  const blob = new Blob([Buffer.from(file.buffer)], { type: file.type || "application/octet-stream" });
+  const blob = new Blob([file.buffer], { type: file.type || "application/octet-stream" });
   form.append("image", new File([blob], file.name, { type: file.type }), file.name);
 
   const r = await apiFetch(path, { method: "POST", body: form });
