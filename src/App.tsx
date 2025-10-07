@@ -85,38 +85,53 @@ function Main() {
 
   const [input, setInput] = useState("");
   const [sending, setSending] = useState(false);
+  // ✅ 답변 두 개로 분리
+  const [suggestionAnswer, setSuggestionAnswer] = useState(""); // 추천질문용
+  const [inputAnswer, setInputAnswer] = useState(""); // 직접 입력용
 
-  async function handleSend() {
-    const text = input.trim();
-    if (!text) return;
-    setSending(true);
-    try {
-      const res = await window.api.callJson("/api/suggestions/ask", {
-        method: "POST",
-        body: { question: text },
-      });
-      console.log("질문 전송 완료:", res);
-      setInput("");
-    } catch (e) {
-      console.error("질문 전송 실패:", e);
-    } finally {
-      setSending(false);
-    }
-  }
+  const FASTAPI_BASE = "http://localhost:8000";
 
-  async function handleQuestionClick(question: string) {
-    if (!question) return;
+   // ✅ 공통 fetch 함수
+  async function fetchAnswer(question: string, target: "suggestion" | "input") {
     try {
-      const res = await fetch("/api/suggestions/ask", {
+      if (!question.trim()) return;
+      if (target === "input") setSending(true);
+
+      const res = await fetch(`${FASTAPI_BASE}/api/qa/answer`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ question }),
       });
+
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const data = await res.json();
-      console.log("AI 응답:", data);
+
+      if (target === "suggestion") {
+        setSuggestionAnswer(data.answer || "AI 응답이 없습니다.");
+      } else {
+        setInputAnswer(data.answer || "AI 응답이 없습니다.");
+      }
     } catch (e) {
       console.error("질문 전송 실패:", e);
+      if (target === "suggestion") {
+        setSuggestionAnswer("❌ AI 서버 응답 오류가 발생했습니다.");
+      } else {
+        setInputAnswer("❌ AI 서버 응답 오류가 발생했습니다.");
+      }
+    } finally {
+      if (target === "input") setSending(false);
     }
+  }
+
+  // 입력 전송
+  async function handleSend() {
+    await fetchAnswer(input, "input");
+    setInput("");
+  }
+
+  // 추천질문 클릭
+  async function handleQuestionClick(question: string) {
+    await fetchAnswer(question, "suggestion");
   }
 
   if (!user) {
@@ -260,6 +275,25 @@ function Main() {
           onQuestionClick={handleQuestionClick}
         />
 
+        {/* ✅ 추천질문 응답 표시 */}
+        {suggestionAnswer && (
+          <div
+            style={{
+              marginTop: 12,
+              padding: "12px 14px",
+              background: "#eef6ff",
+              borderRadius: 10,
+              border: "1px solid rgba(180,200,240,0.4)",
+              whiteSpace: "pre-line",
+              lineHeight: 1.8,
+            }}
+          >
+            🧠 <b>추천질문에 대한 AI 답변</b>  
+            <br />
+            {suggestionAnswer}
+          </div>
+        )}
+
         {/* 질문 입력 */}
         <section className="card">
           <h3>궁금한 점이 있으면 물어보세요</h3>
@@ -296,6 +330,24 @@ function Main() {
               {sending ? "전송중..." : "전송"}
             </button>
           </div>
+          {/* AI 응답 표시 */}
+          {inputAnswer && (
+            <div
+              style={{
+                marginTop: 12,
+                padding: "12px 14px",
+                background: "#f8faff",
+                borderRadius: 10,
+                border: "1px solid rgba(200,200,230,0.3)",
+                whiteSpace: "pre-line",
+                lineHeight: 1.8,
+              }}
+            >
+              🧠 <b>직접 입력한 질문에 대한 AI 답변</b>  
+              <br />
+              {inputAnswer}
+            </div>
+          )}
         </section>
       </main>
     </div>
