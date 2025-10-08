@@ -5,8 +5,9 @@ import { AuthProvider, useAuth } from "./components/auth/AuthContext";
 import SignupForm from "./components/auth/SignupForm";
 import LoginForm from "./components/auth/LoginForm";
 import { useScreenshot } from "./hooks/useScreenshot";
-import { useSuggestions } from "./hooks/useSuggestion"; // ✅ SSE는 여기서 받음
-import SuggestionReplace from "./components/SuggestionReplace"; // ✅ 결과 표시
+import { useSuggestions } from "./hooks/useSuggestion";
+import SuggestionReplace from "./components/SuggestionReplace";
+import AnswerCard from "./components/AnswerCard";
 
 /* 회원가입 모달 */
 function SignupDialog({
@@ -77,7 +78,6 @@ function AuthCard() {
   );
 }
 
-/* 메인 화면 */
 function Main() {
   const { user, setUser } = useAuth();
   const { startCapture, stopCapture } = useScreenshot();
@@ -85,13 +85,21 @@ function Main() {
 
   const [input, setInput] = useState("");
   const [sending, setSending] = useState(false);
-  // ✅ 답변 두 개로 분리
-  const [suggestionAnswer, setSuggestionAnswer] = useState(""); // 추천질문용
-  const [inputAnswer, setInputAnswer] = useState(""); // 직접 입력용
+
+  // ✅ 새 타입 정의
+  interface AnswerData {
+    question: string;
+    ai_thoughts: string;
+    answer: string;
+  }
+
+  // ✅ 답변 상태를 객체형으로 변경
+  const [suggestionAnswer, setSuggestionAnswer] = useState<AnswerData | null>(null);
+  const [inputAnswer, setInputAnswer] = useState<AnswerData | null>(null);
 
   const FASTAPI_BASE = "http://localhost:8000";
 
-   // ✅ 공통 fetch 함수
+  // ✅ 공통 fetch 함수
   async function fetchAnswer(question: string, target: "suggestion" | "input") {
     try {
       if (!question.trim()) return;
@@ -106,22 +114,26 @@ function Main() {
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const data = await res.json();
 
+      // ✅ data.answer → data 전체 객체로 변경
       if (target === "suggestion") {
-        setSuggestionAnswer(data.answer || "AI 응답이 없습니다.");
+        setSuggestionAnswer(data);
       } else {
-        setInputAnswer(data.answer || "AI 응답이 없습니다.");
+        setInputAnswer(data);
       }
     } catch (e) {
       console.error("질문 전송 실패:", e);
-      if (target === "suggestion") {
-        setSuggestionAnswer("❌ AI 서버 응답 오류가 발생했습니다.");
-      } else {
-        setInputAnswer("❌ AI 서버 응답 오류가 발생했습니다.");
-      }
+      const errObj: AnswerData = {
+        question,
+        ai_thoughts: "(오류로 인해 사고 과정을 불러올 수 없습니다.)",
+        answer: "❌ AI 서버 응답 오류가 발생했습니다.",
+      };
+      if (target === "suggestion") setSuggestionAnswer(errObj);
+      else setInputAnswer(errObj);
     } finally {
       if (target === "input") setSending(false);
     }
   }
+
 
   // 입력 전송
   async function handleSend() {
@@ -270,28 +282,15 @@ function Main() {
         </section>
 
         {/* ✅ SSE로 받은 분석 결과 표시 */}
-        <SuggestionReplace
-          payload={analysisData}
-          onQuestionClick={handleQuestionClick}
-        />
+        <SuggestionReplace payload={analysisData} onQuestionClick={handleQuestionClick} />
 
         {/* ✅ 추천질문 응답 표시 */}
         {suggestionAnswer && (
-          <div
-            style={{
-              marginTop: 12,
-              padding: "12px 14px",
-              background: "#eef6ff",
-              borderRadius: 10,
-              border: "1px solid rgba(180,200,240,0.4)",
-              whiteSpace: "pre-line",
-              lineHeight: 1.8,
-            }}
-          >
-            🧠 <b>추천질문에 대한 AI 답변</b>  
-            <br />
-            {suggestionAnswer}
-          </div>
+          <AnswerCard
+            title="🧠 추천질문에 대한 AI 답변"
+            data={suggestionAnswer}
+            color="#eef6ff"
+          />
         )}
 
         {/* 질문 입력 */}
@@ -330,23 +329,14 @@ function Main() {
               {sending ? "전송중..." : "전송"}
             </button>
           </div>
-          {/* AI 응답 표시 */}
+
+          {/* ✅ AI 응답 표시 */}
           {inputAnswer && (
-            <div
-              style={{
-                marginTop: 12,
-                padding: "12px 14px",
-                background: "#f8faff",
-                borderRadius: 10,
-                border: "1px solid rgba(200,200,230,0.3)",
-                whiteSpace: "pre-line",
-                lineHeight: 1.8,
-              }}
-            >
-              🧠 <b>직접 입력한 질문에 대한 AI 답변</b>  
-              <br />
-              {inputAnswer}
-            </div>
+            <AnswerCard
+              title="🧩 직접 입력한 질문에 대한 AI 답변"
+              data={inputAnswer}
+              color="#f8faff"
+            />
           )}
         </section>
       </main>
