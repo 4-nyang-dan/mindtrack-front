@@ -15,14 +15,14 @@ export default function SuggestionReplace({ payload, onQuestionClick }: Props) {
   } = suggestion;
   const predicted_questions = payload?.predicted_questions || [];
 
-  // ✅ description JSON 문자열일 수도 있음
+  //  description JSON 문자열일 수도 있음
   let descText = description;
   try {
     const parsed = JSON.parse(description);
     if (parsed.current_action) descText = parsed.current_action;
   } catch {}
 
-  // ✅ 공통 스타일
+  //  공통 스타일
   const cardBoxStyle: React.CSSProperties = {
     background: "linear-gradient(90deg, #f9fbff 0%, #f2f6ff 100%)",
     border: "1px solid rgba(190,200,230,0.4)",
@@ -30,16 +30,16 @@ export default function SuggestionReplace({ payload, onQuestionClick }: Props) {
     padding: "12px 14px",
     minHeight: 40,
     fontSize: 14,
-    lineHeight: 1.8, // ✅ 줄간격 넓게
+    lineHeight: 1.8, //  줄간격 넓게
     color: "#222",
-    fontFamily: '"Pretendard", "Noto Sans KR", sans-serif', // ✅ 부드러운 폰트
+    fontFamily: '"Pretendard", "Noto Sans KR", sans-serif', //  부드러운 폰트
     whiteSpace: "pre-line",
     transition: "all 0.3s ease",
   };
 
   return (
     <>
-      {/* ✅ 사용자 현재 상황 */}
+      {/*  사용자 현재 상황 */}
       <section className="card">
         <h3
           style={{
@@ -56,7 +56,7 @@ export default function SuggestionReplace({ payload, onQuestionClick }: Props) {
         </div>
       </section>
 
-      {/* ✅ 앞으로 이런 일도 할 것인가요? */}
+      {/*  앞으로 이런 일도 할 것인가요? */}
       <section className="card">
         <h3
           style={{
@@ -89,7 +89,7 @@ export default function SuggestionReplace({ payload, onQuestionClick }: Props) {
         </div>
       </section>
 
-      {/* ✅ 혹시 이런 것이 궁금하신가요? */}
+      {/*  혹시 이런 것이 궁금하신가요? */}
       <section className="card">
         <h3
           style={{
