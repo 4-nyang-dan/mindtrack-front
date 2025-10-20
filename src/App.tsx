@@ -8,6 +8,8 @@ import { useScreenshot } from "./hooks/useScreenshot";
 import { useSuggestions } from "./hooks/useSuggestion";
 import SuggestionReplace from "./components/SuggestionReplace";
 import AnswerCard from "./components/AnswerCard";
+import LoadingQuestion from "./components/LoadingQuestion";
+
 
 /* 회원가입 모달 */
 function SignupDialog({
@@ -85,25 +87,33 @@ function Main() {
 
   const [input, setInput] = useState("");
   const [sending, setSending] = useState(false);
+  // Main() 내부 상태: 아래로 교체
+  const [loading, setLoading] = useState(false); // ✅ 전역 로딩
 
-  // ✅ 새 타입 정의
+
+  //  새 타입 정의
   interface AnswerData {
     question: string;
     ai_thoughts: string;
     answer: string;
   }
 
-  // ✅ 답변 상태를 객체형으로 변경
+  //  답변 상태를 객체형으로 변경
   const [suggestionAnswer, setSuggestionAnswer] = useState<AnswerData | null>(null);
   const [inputAnswer, setInputAnswer] = useState<AnswerData | null>(null);
 
+  const [loadingSuggestion, setLoadingSuggestion] = useState(false);
+  const [loadingInput, setLoadingInput] = useState(false);
+
   const FASTAPI_BASE = "http://localhost:8000";
 
-  // ✅ 공통 fetch 함수
+  //  공통 fetch 함수
   async function fetchAnswer(question: string, target: "suggestion" | "input") {
     try {
       if (!question.trim()) return;
-      if (target === "input") setSending(true);
+
+      if (target === "input") setLoadingInput(true);
+      else setLoadingSuggestion(true);
 
       const res = await fetch(`${FASTAPI_BASE}/api/qa/answer`, {
         method: "POST",
@@ -114,7 +124,6 @@ function Main() {
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const data = await res.json();
 
-      // ✅ data.answer → data 전체 객체로 변경
       if (target === "suggestion") {
         setSuggestionAnswer(data);
       } else {
@@ -122,7 +131,7 @@ function Main() {
       }
     } catch (e) {
       console.error("질문 전송 실패:", e);
-      const errObj: AnswerData = {
+      const errObj = {
         question,
         ai_thoughts: "(오류로 인해 사고 과정을 불러올 수 없습니다.)",
         answer: "❌ AI 서버 응답 오류가 발생했습니다.",
@@ -130,19 +139,23 @@ function Main() {
       if (target === "suggestion") setSuggestionAnswer(errObj);
       else setInputAnswer(errObj);
     } finally {
-      if (target === "input") setSending(false);
+      if (target === "input") setLoadingInput(false);
+      else setLoadingSuggestion(false);
     }
   }
 
 
   // 입력 전송
   async function handleSend() {
+    if (loading) return;                   // ✅ 로딩 중 재클릭 방지
     await fetchAnswer(input, "input");
     setInput("");
   }
 
   // 추천질문 클릭
+  // 추천질문 클릭 핸들러도 방어 추가
   async function handleQuestionClick(question: string) {
+    if (loading) return;                   // ✅ 로딩 중 재클릭 방지
     await fetchAnswer(question, "suggestion");
   }
 
@@ -153,6 +166,8 @@ function Main() {
       </div>
     );
   }
+
+
 
   const MAX_W = 520;
   const TOPBAR_H = 64;
@@ -285,7 +300,8 @@ function Main() {
         <SuggestionReplace payload={analysisData} onQuestionClick={handleQuestionClick} />
 
         {/* ✅ 추천질문 응답 표시 */}
-        {suggestionAnswer && (
+        {loadingSuggestion && <LoadingQuestion text="AI가 추천질문에 대한 답변을 준비 중입니다..." />}
+        {suggestionAnswer && !loadingSuggestion && (
           <AnswerCard
             title="🧠 추천질문에 대한 AI 답변"
             data={suggestionAnswer}
@@ -313,7 +329,7 @@ function Main() {
             />
             <button
               onClick={handleSend}
-              disabled={!input.trim() || sending}
+              disabled={!input.trim() || loading}    // ✅ 전역 로딩 반영
               style={{
                 height: 38,
                 padding: "0 14px",
@@ -321,17 +337,19 @@ function Main() {
                 borderRadius: 8,
                 fontWeight: 700,
                 color: "#fff",
-                background: sending ? "#9aa7e0" : "#4b74ff",
+                background: loading ? "#9aa7e0" : "#4b74ff",
                 opacity: !input.trim() ? 0.6 : 1,
-                cursor: !input.trim() || sending ? "default" : "pointer",
+                cursor: !input.trim() || loading ? "default" : "pointer",
               }}
             >
-              {sending ? "전송중..." : "전송"}
+              {loading ? "전송중..." : "전송"}
             </button>
+
           </div>
 
           {/* ✅ AI 응답 표시 */}
-          {inputAnswer && (
+          {loadingInput && <LoadingQuestion text="AI가 답변을 작성 중입니다..." />}
+          {inputAnswer && !loadingInput && (
             <AnswerCard
               title="🧩 직접 입력한 질문에 대한 AI 답변"
               data={inputAnswer}
