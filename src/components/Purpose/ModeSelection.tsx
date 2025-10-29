@@ -1,45 +1,76 @@
-// components/ModeSelection.tsx
 import React from "react";
 import Topbar from "../../layout/Topbar";
-import './ModeSelection.css'; // 스타일시트 추가
+import styles from "./ModeSelection.module.css";
 
 interface ModeSelectionProps {
   onModeSelect: (mode: "vulnerable" | "regular") => void;
-  onLogout: () => void;  // 로그아웃 처리 함수 받기
-  user: { id: string };  // 사용자 정보 받기
+  onLogout: () => void;
+  user: { id: string };
 }
 
-const ModeSelection: React.FC<ModeSelectionProps> = ({ onModeSelect, onLogout, user }) => {
+const ModeSelection: React.FC<ModeSelectionProps> = ({
+  onModeSelect,
+  onLogout,
+  user,
+}) => {
   return (
-    <div className="mode-selection">
-      {/* 헤더에 로그아웃 버튼 */}
+    <div className={styles.modeSelectionWrapper}>
       <Topbar onLogout={onLogout} />
 
-      <div className="mode-card">
-        <div className="header">
-          <h2 className="mode-selection-title">반갑습니다, {user.id}님!</h2>
-        </div>
+      <div className={styles.centerWrapper}>
+        <div className={styles.modeCard}>
+          <h2 className={styles.modeSelectionTitle}>
+            반갑습니다, {user.id}님 👋
+          </h2>
 
-        {/* 인사 메시지 개선 */}
-        <p className="greeting">사용할 모드를 선택해주세요</p>
+          <p className={styles.modeGreeting}>사용할 모드를 선택해주세요</p>
 
-        {/* 모드 설명 추가 */}
-        <p className="mode-selection-description">
-          두 가지 모드가 제공됩니다. <br/>아래 버튼을 눌러 원하는 모드를 선택해 주세요.<br />
-          <br />
-          - <strong>취약계층 모드</strong>: 접근성이 중요하고 특별한 지원이 필요한 사용자에게 맞춰진 모드<br />
-          - <strong>일반 사용자 모드</strong>: 일반적인 기능을 제공하는 기본 모드
-        </p>
+          <div className={styles.modeSelectionDescription}>
+            <p>
+              두 가지 모드가 제공됩니다.
+              <br />
+              아래에서 원하는 환경을 선택해 주세요.
+            </p>
+          </div>
 
-        <div className="mode-selection-buttons">
-          <button className="mode-button vulnerable" onClick={() => onModeSelect("vulnerable")}>
-            <img src="/images/vulnerable-icon.png" alt="취약계층 모드 아이콘" className="mode-icon" />
-            취약계층 모드
-          </button>
-          <button className="mode-button regular" onClick={() => onModeSelect("regular")}>
-            <img src="/images/regular-icon.png" alt="일반 사용자 모드 아이콘" className="mode-icon" />
-            일반 사용자 모드
-          </button>
+          {/* 카드형 리스트 구조 */}
+          <div className={styles.modeList}>
+            <div className={styles.modeInfoBox}>
+              <strong>취약계층 모드</strong>
+              <p>접근성 향상과 추가 안내를 제공합니다.</p>
+            </div>
+            <div className={styles.modeInfoBox}>
+              <strong>일반 사용자 모드</strong>
+              <p>기본 기능 중심의 깔끔한 인터페이스입니다.</p>
+            </div>
+          </div>
+
+          {/* 버튼 영역 */}
+          <div className={styles.modeSelectionButtons}>
+            <button
+              className={`${styles.modeButton} ${styles.vulnerable}`}
+              onClick={() => onModeSelect("vulnerable")}
+            >
+              <img
+                src="/images/vulnerable-icon.png"
+                alt="취약계층 모드 아이콘"
+                className={styles.modeIcon}
+              />
+              취약계층 모드로 시작하기
+            </button>
+
+            <button
+              className={`${styles.modeButton} ${styles.regular}`}
+              onClick={() => onModeSelect("regular")}
+            >
+              <img
+                src="/images/regular-icon.png"
+                alt="일반 사용자 모드 아이콘"
+                className={styles.modeIcon}
+              />
+              일반 사용자 모드로 시작하기
+            </button>
+          </div>
         </div>
       </div>
     </div>

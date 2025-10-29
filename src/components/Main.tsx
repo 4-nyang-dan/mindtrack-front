@@ -146,8 +146,10 @@ const Main: React.FC = () => {
     >
       {/* Topbar */}
       <Topbar
-        onLogout={handleLogout}
-      />
+  onLogout={handleLogout}
+  showBackButton={mode !== null} // 모드 선택 이후 화면이면 이전 버튼 보이기
+  onBack={() => setMode(null)}   //“이전” 클릭 시 모드 선택 화면으로 복귀
+/>
 
       <main
         style={{
