@@ -25,13 +25,10 @@ var __importStar = (this && this.__importStar) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const electron_1 = require("electron");
 const path = __importStar(require("path"));
-const fs = __importStar(require("fs"));
-const promises_1 = require("timers/promises");
 const API_BASE = process.env.API_BASE ?? "http://localhost:8080";
 const APP_NAME = "MindTrack";
-const SAVE_DIR = path.join(__dirname, "../screenshots");
-if (!fs.existsSync(SAVE_DIR))
-    fs.mkdirSync(SAVE_DIR, { recursive: true });
+// const SAVE_DIR = path.join(__dirname, "../screenshots");
+// if (!fs.existsSync(SAVE_DIR)) fs.mkdirSync(SAVE_DIR, { recursive: true });
 // -------------------- 로그 --------------------
 electron_1.ipcMain.on("LOG_TO_MAIN", (_e, message) => {
     console.log("[From Renderer]", message);
@@ -125,13 +122,14 @@ electron_1.ipcMain.handle("GET_SCREENSHOT", async () => {
         throw new Error("화면 소스를 가져오지 못했습니다.");
     const pngBuffer = sources[0].thumbnail.toPNG();
     const base64 = pngBuffer.toString("base64");
-    const filePath = path.join(SAVE_DIR, `screenshot-${Date.now()}.png`);
-    fs.writeFileSync(filePath, pngBuffer);
+    //const filePath = path.join(SAVE_DIR, `screenshot-${Date.now()}.png`);
+    /*fs.writeFileSync(filePath, pngBuffer);
+  
     // N초 뒤 자동 삭제
     (async () => {
-        await (0, promises_1.setTimeout)(30000); // 30초
-        fs.promises.unlink(filePath).catch(() => { });
-    })();
+      await delay(30_000); // 30초
+      fs.promises.unlink(filePath).catch(() => {});
+    })(); */
     return `data:image/png;base64,${base64}`;
 });
 // -------------------- 인증 --------------------

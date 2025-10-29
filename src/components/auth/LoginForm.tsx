@@ -45,7 +45,7 @@ export default function LoginForm() {
           inputMode="text"
         />
         <label htmlFor="login-id" className="floating">아이디</label>
-        <div className="help">영문/숫자/._- 조합 권장</div>
+        <div className="help">아이디를 입력해주세요</div>
       </div>
 
       {/* 비밀번호 */}
@@ -61,7 +61,7 @@ export default function LoginForm() {
           autoComplete="current-password"
         />
         <label htmlFor="login-pw" className="floating">비밀번호</label>
-        <div className="help">{error ?? "최소 8자 이상을 권장해요"}</div>
+        <div className="help">{error ?? "비밀번호를 입력해주세요"}</div>
       </div>
 
       <div className="actions" style={{ justifyContent: "center" }}>

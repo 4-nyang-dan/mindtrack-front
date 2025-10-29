@@ -1,0 +1,150 @@
+/* components/ModeSelection.css */
+.mode-selection {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  background: linear-gradient(135deg, #7aa2ff, #a4baff); /* 배경 그라데이션 */
+}
+
+.mode-card {
+  width: min(960px, 90vw);
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-1);
+  padding: 24px;
+  text-align: center;
+  max-width: 90%;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 14px;
+  justify-content: center;
+}
+
+.logo {
+  width: 34px;
+  height: 34px;
+  border-radius: 12px;
+  background:
+    radial-gradient(16px 16px at 70% 30%, var(--accent), transparent 60%),
+    radial-gradient(22px 22px at 30% 70%, var(--primary), transparent 60%),
+    var(--panel-2);
+  border: 1px solid var(--line);
+  box-shadow: var(--shadow-2) inset;
+}
+
+.mode-selection-title {
+  font-size: 36px;
+  font-weight: 700;
+  margin-left: 10px;
+  text-shadow: 2px 2px 5px rgba(0, 0, 0, 0.3);
+}
+
+.greeting {
+  font-size: 22px;
+  font-weight: 500;
+  margin-bottom: 12px;
+  color: var(--primary);
+}
+
+.mode-selection-description {
+  font-size: 16px;
+  margin-bottom: 40px;
+  color: var(--muted);
+  font-weight: 400;
+  line-height: 1.6;
+}
+
+.mode-selection-buttons {
+  display: flex;
+  gap: 30px; /* 버튼 사이 간격 */
+  justify-content: center;
+  flex-wrap: wrap;
+  animation: fadeIn 1s ease-in-out; /* 버튼 등장 애니메이션 */
+}
+
+.mode-button {
+  background: rgba(255, 255, 255, 0.8);
+  color: #333;
+  font-size: 18px;
+  font-weight: 600;
+  border: none;
+  border-radius: var(--radius-lg);
+  cursor: pointer;
+  transition: background-color 0.3s ease, transform 0.3s ease, box-shadow 0.3s ease;
+  display: flex;
+  align-items: center; /* 세로 중앙 정렬 */
+  justify-content: flex-start; /* 수평 시작 정렬 (아이콘 왼쪽 정렬) */
+  width: 300px;
+  text-align: left; /* 텍스트 중앙 정렬 */
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  position: relative;
+  height: 60px; /* 버튼 높이 고정 */
+  padding: 10px 30px; /* 패딩 조정 */
+  white-space: nowrap; /* 텍스트 줄바꿈 없이 한 줄로 표시 */
+}
+
+.mode-button:hover {
+  background: rgba(255, 255, 255, 0.9);
+  transform: scale(1.05);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.15);
+}
+
+.mode-button:active {
+  transform: scale(0.98);
+}
+
+.mode-button .mode-icon {
+  width: 50px; /* 아이콘 크기 통일 */
+  height: 50px; /* 아이콘 크기 통일 */
+  margin-right: 15px; /* 아이콘과 텍스트 간격 통일 */
+}
+
+.mode-button.vulnerable {
+  background: #e9f5ff;
+}
+
+.mode-button.regular {
+  background: #f7f7f7;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* 모바일 환경에서 카드 크기 조정 */
+@media (max-width: 768px) {
+  .card {
+    padding: 16px;
+    width: 100%;
+  }
+
+  .mode-selection-title {
+    font-size: 30px;
+  }
+
+  .greeting {
+    font-size: 18px;
+  }
+
+  .mode-selection-description {
+    font-size: 14px;
+  }
+
+  .mode-button {
+    width: 250px;
+    font-size: 16px;
+  }
+}

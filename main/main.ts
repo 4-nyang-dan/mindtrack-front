@@ -7,8 +7,8 @@ import keytar from "keytar";
 const API_BASE = process.env.API_BASE ?? "http://localhost:8080";
 const APP_NAME = "MindTrack";
 
-const SAVE_DIR = path.join(__dirname, "../screenshots");
-if (!fs.existsSync(SAVE_DIR)) fs.mkdirSync(SAVE_DIR, { recursive: true });
+// const SAVE_DIR = path.join(__dirname, "../screenshots");
+// if (!fs.existsSync(SAVE_DIR)) fs.mkdirSync(SAVE_DIR, { recursive: true });
 
 // -------------------- 로그 --------------------
 ipcMain.on("LOG_TO_MAIN", (_e, message) => {
@@ -118,14 +118,14 @@ ipcMain.handle("GET_SCREENSHOT", async () => {
   const pngBuffer = sources[0].thumbnail.toPNG();
   const base64 = pngBuffer.toString("base64");
 
-  const filePath = path.join(SAVE_DIR, `screenshot-${Date.now()}.png`);
-  fs.writeFileSync(filePath, pngBuffer);
+  //const filePath = path.join(SAVE_DIR, `screenshot-${Date.now()}.png`);
+  /*fs.writeFileSync(filePath, pngBuffer);
 
   // N초 뒤 자동 삭제
   (async () => {
     await delay(30_000); // 30초
     fs.promises.unlink(filePath).catch(() => {});
-  })();
+  })(); */
 
   return `data:image/png;base64,${base64}`;
 });
