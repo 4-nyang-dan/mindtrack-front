@@ -1,209 +1,319 @@
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
+import {
+  HelpCircle,
+  ClipboardList,
+  Target,
+  CheckCircle2,
+  ChevronLeft,
+  ChevronRight,
+  BookOpen,
+  ZoomIn,
+} from "lucide-react";
 
-// 컴포넌트 Props 정의
-interface Props {
-  purpose: string; // 설정된 목표 텍스트
-  onComplete: () => void; // "완료" 버튼 클릭 시 호출될 함수 (purpose를 초기화)
+// --- (추가) 타입 정의 ---
+interface PlanStep {
+  step: number;
+  action: string;
+  guide: string;
+  detail: string;
 }
 
-// 공통 버튼 스타일 (상단 4개 버튼)
-const goalButtonStyle: React.CSSProperties = {
-  flex: 1, // 4개 버튼이 공간을 균등하게 차지
-  padding: "10px 12px",
-  borderRadius: "10px",
-  border: "1px solid #ccc",
-  background: "#ffffff",
+export interface PlanData { // (수정) Main.tsx에서 import 할 수 있도록 export
+  goal: string;
+  total_steps: number;
+  steps: PlanStep[];
+}
+
+// --- (제거) Mock 데이터 제거 ---
+// const mockPlanData: PlanData = { ... };
+// ------------------------------
+
+// 공통 버튼 스타일
+const baseButtonStyle: React.CSSProperties = {
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
+  gap: "6px",
+  padding: "8px 12px",
+  borderRadius: "8px",
+  border: "1px solid transparent",
   fontWeight: "600",
-  fontSize: "14px",
+  fontSize: "13px",
   cursor: "pointer",
   transition: "all 0.2s ease",
-  textAlign: "center",
-  whiteSpace: "nowrap", // 줄바꿈 방지
 };
 
-// '완료' 버튼을 위한 별도 스타일
-const completeButtonStyle: React.CSSProperties = {
-  ...goalButtonStyle,
-  background: "#ffefef", // 붉은 계열 배경
-  color: "#d90429", // 붉은 계열 텍스트
-  border: "1px solid #ffb3b3",
+// --- (수정) 버튼 스타일 (색상 추가) ---
+const buttonStyles: { [key: string]: React.CSSProperties } = {
+  help: {
+    ...baseButtonStyle,
+    backgroundColor: "#fff1f2", // Light Red
+    borderColor: "#ffdde0",
+    color: "#be123c", // Dark Red
+  },
+  plan: {
+    ...baseButtonStyle,
+    backgroundColor: "#eff6ff", // Light Blue
+    borderColor: "#dbeafe",
+    color: "#2563eb", // Dark Blue
+  },
+  summary: {
+    ...baseButtonStyle,
+    backgroundColor: "#f5f3ff", // Light Purple
+    borderColor: "#e0e7ff",
+    color: "#6d28d9", // Dark Purple
+  },
+  complete: {
+    ...baseButtonStyle,
+    backgroundColor: "#f0fdf4", // Light Green
+    borderColor: "#dcfce7",
+    color: "#16a34a", // Dark Green
+  },
 };
+// ---------------------------------
 
-// '가이드' 카드 스타일
-const guideCardStyle: React.CSSProperties = {
-  width: "100%",
-  padding: "16px",
-  minHeight: "100px", // 스케치(image_9fff3a.png) 참고
-  borderRadius: "12px",
-  border: "1px solid #e0e0e0",
-  background: "#ffffff",
-  boxSizing: "border-box", // 패딩 포함 크기 계산
-  fontSize: "15px",
-  lineHeight: 1.6,
-};
+// --- (수정) Props 인터페이스 ---
+interface GoalTrackerProps {
+  planData: PlanData; // (수정) JSON 데이터를 prop으로 받음
+  onComplete: () => void;
+}
+// -----------------------------
 
-// 메인 컴포넌트
-export default function GoalTracker({ purpose, onComplete }: Props) {
-  // 현재 단계 상태 관리 (스케치: image_9fff1a.png)
-  const [currentStep, setCurrentStep] = useState(1);
-  const totalSteps = 6; // 스케치 예시(1/6) 기준
+export default function GoalTracker({ planData, onComplete }: GoalTrackerProps) {
+  // --- (수정) 상태 관리 ---
+  // const [planData] = useState<PlanData>(mockPlanData); // (제거)
+  const [currentStep, setCurrentStep] = useState(0); // 현재 단계 (0-indexed)
+  // -------------------------
 
-  // 단계 이동 핸들러
-  const handlePrevStep = () => {
-    setCurrentStep((prev) => Math.max(prev - 1, 1)); // 1단계 밑으로 못 내려가게
-  };
+  // --- (추가) 현재 단계에 맞는 데이터 추출 ---
+  const currentStepData = useMemo(() => {
+    // (수정) prop으로 받은 planData 사용
+    return planData.steps[currentStep];
+  }, [currentStep, planData]);
+  // ------------------------------------
+
+  // --- (추가) 네비게이션 핸들러 ---
   const handleNextStep = () => {
-    setCurrentStep((prev) => Math.min(prev + 1, totalSteps)); // totalSteps 위로 못 올라가게
+    setCurrentStep((prev) => Math.min(prev + 1, planData.total_steps - 1));
   };
+
+  const handlePrevStep = () => {
+    setCurrentStep((prev) => Math.max(prev - 1, 0));
+  };
+
+  const isFirstStep = currentStep === 0;
+  const isLastStep = currentStep === planData.total_steps - 1;
+  // ----------------------------------
+
+  // --- (추가) 페이지네이션 점들 ---
+  const renderDots = () => {
+    return Array.from({ length: planData.total_steps }, (_, index) => (
+      <div
+        key={index}
+        style={{
+          width: "8px",
+          height: "8px",
+          borderRadius: "50%",
+          backgroundColor: index === currentStep ? "#2563eb" : "#dbeafe",
+          transition: "background-color 0.3s ease",
+        }}
+      />
+    ));
+  };
+  // ------------------------------
 
   return (
-    // 전체 UI를 감싸는 div (Main.tsx의 gap: 16px와 일관되게)
     <div
       style={{
         display: "flex",
         flexDirection: "column",
-        width: "100%",
         gap: "16px",
+        width: "100%",
       }}
     >
-      {/* 1. 상단 버튼 4개 (스케치: image_9ffebd.png) */}
-      <section className="card" style={{ padding: "12px" }}>
-        <div style={{ display: "flex", justifyContent: "center", gap: "10px" }}>
-          <button style={goalButtonStyle}>🆘 HELP</button>
-          <button style={goalButtonStyle}>🗺️ 전체 계획</button>
-          <button style={goalButtonStyle}>📑 세부계획</button>
-          <button
-            style={completeButtonStyle} // '완료' 버튼
-            onClick={onComplete} // 클릭 시 Main.tsx의 handleReset 호출
-          >
-            ✅ 완료
-          </button>
-        </div>
+      {/* --- (수정) 1. 상단 버튼 (이름 변경, 색상/아이콘 적용) --- */}
+      <section
+        className="card"
+        style={{
+          padding: "12px",
+          display: "flex",
+          justifyContent: "space-between",
+          gap: "8px",
+        }}
+      >
+        <button style={buttonStyles.help}>
+          <HelpCircle size={14} />
+          HELP
+        </button>
+        <button style={buttonStyles.plan}>
+          <ClipboardList size={14} />
+          전체 계획
+        </button>
+        <button style={buttonStyles.summary}>
+          <Target size={14} />
+          작업 요약
+        </button>
+        <button style={buttonStyles.complete} onClick={onComplete}>
+          <CheckCircle2 size={14} />
+          완료
+        </button>
       </section>
 
-      {/* 2. 목표 표시 (스케치: image_9ffef8.png) */}
-      <section className="card" style={{ padding: "16px" }}>
-        <h3
-          style={{
-            margin: 0,
-            fontSize: "16px",
-            fontWeight: 700,
-            color: "#333",
-          }}
-        >
-          🎯 목표:{" "}
-          <span style={{ color: "#007bff", fontWeight: "bold" }}>
-            {purpose}
-          </span>
-        </h3>
+      {/* --- (수정) 2. 목표 표시 (JSON 데이터 사용) --- */}
+      <section
+        className="card"
+        style={{
+          padding: "16px",
+          display: "flex",
+          alignItems: "center",
+          gap: "10px",
+        }}
+      >
+        <Target size={18} style={{ color: "#6d28d9" }} />
+        <span style={{ fontWeight: "600", fontSize: "15px" }}>
+          목표: {planData.goal}
+        </span>
       </section>
 
-      {/* 3. 단계 네비게이터 (스케치: image_9fff1a.png) */}
-      <section className="card" style={{ padding: "16px" }}>
+      {/* --- (수정) 3. 현재 단계 (동적 텍스트, 네비게이션) --- */}
+      <section className="card" style={{ padding: "20px" }}>
         <h3
           style={{
-            marginTop: 0,
-            marginBottom: "12px",
-            fontSize: "16px",
-            fontWeight: 700,
             textAlign: "center",
+            fontWeight: "600",
+            fontSize: "14px",
+            color: "#4b5563",
+            margin: 0,
+            marginBottom: "12px",
           }}
         >
           현재 단계
         </h3>
-        {/* 네비게이터 UI */}
+
+        {/* (추가) 단계 텍스트 (action) */}
+        <p
+          style={{
+            textAlign: "center",
+            fontWeight: "bold",
+            fontSize: "18px",
+            color: "#111827",
+            margin: 0,
+            marginBottom: "20px",
+            minHeight: "2.5em", // 텍스트 길이에 따른 높이 변화 방지
+            lineHeight: 1.4,
+          }}
+        >
+          {currentStepData.action}
+        </p>
+
         <div
           style={{
             display: "flex",
-            alignItems: "center",
             justifyContent: "space-between",
+            alignItems: "center",
             gap: "12px",
           }}
         >
           {/* 왼쪽 화살표 */}
           <button
             onClick={handlePrevStep}
-            disabled={currentStep === 1}
-            style={{ ...goalButtonStyle, flex: 0, padding: "12px", background: currentStep === 1 ? "#f0f0f0" : "white" }}
+            disabled={isFirstStep}
+            style={{ ...navButtonStyle, opacity: isFirstStep ? 0.4 : 1 }}
           >
-            ⬅️
+            <ChevronLeft size={20} />
           </button>
-          {/* 단계 표시 (1 / 6) */}
-          <span style={{ fontSize: "20px", fontWeight: "bold", color: "#333" }}>
-            {currentStep} / {totalSteps}
-          </span>
+
+          {/* 페이지 표시 */}
+          <div
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              gap: "10px",
+            }}
+          >
+            <span
+              style={{
+                fontSize: "18px",
+                fontWeight: "bold",
+                color: "#1f2937",
+              }}
+            >
+              {currentStep + 1} / {planData.total_steps}
+            </span>
+            <div style={{ display: "flex", gap: "6px" }}>{renderDots()}</div>
+          </div>
+
           {/* 오른쪽 화살표 */}
           <button
             onClick={handleNextStep}
-            disabled={currentStep === totalSteps}
-            style={{ ...goalButtonStyle, flex: 0, padding: "12px", background: currentStep === totalSteps ? "#f0f0f0" : "white" }}
+            disabled={isLastStep}
+            style={{ ...navButtonStyle, opacity: isLastStep ? 0.4 : 1 }}
           >
-            ➡️
+            <ChevronRight size={20} />
           </button>
         </div>
-        {/* 단계 표시 점 (Dots) */}
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "center",
-            gap: "8px",
-            marginTop: "12px",
-          }}
-        >
-          {Array.from({ length: totalSteps }).map((_, index) => (
-            <div
-              key={index}
-              style={{
-                width: "12px",
-                height: "12px",
-                borderRadius: "50%",
-                background:
-                  index + 1 === currentStep ? "#007bff" : "#e0e0e0",
-                transition: "background 0.3s",
-              }}
-            ></div>
-          ))}
-        </div>
       </section>
 
-      {/* 4. 가이드 (스케치: image_9fff3a.png) */}
-      <section style={guideCardStyle}>
-        <h3
-          style={{
-            marginTop: 0,
-            marginBottom: "10px",
-            fontSize: "16px",
-            fontWeight: 700,
-          }}
-        >
-          📘 가이드
+      {/* --- (수정) 4. 가이드 (동적 텍스트) --- */}
+      <section className="card" style={{ padding: "20px" }}>
+        <h3 style={guideHeaderStyle}>
+          <BookOpen size={16} />
+          가이드
         </h3>
-        {/* TODO: 가이드 내용 */}
-        <p style={{ margin: 0 }}>
-          {/* 단계별 가이드 (임시) */}
-          현재 {currentStep}단계에 대한 가이드 내용이 여기에 표시됩니다.
-        </p>
+        <p style={guideBodyStyle}>{currentStepData.guide}</p>
       </section>
 
-      {/* 5. 상세 가이드 (스케치: image_9fff58.png) */}
-      <section style={guideCardStyle}>
-        <h3
+      {/* --- (수정) 5. 상세 가이드 (동적 텍스트) --- */}
+      <section className="card" style={{ padding: "20px" }}>
+        <h3 style={guideHeaderStyle}>
+          <ZoomIn size={16} />
+          상세 가이드
+        </h3>
+        <p
           style={{
-            marginTop: 0,
-            marginBottom: "10px",
-            fontSize: "16px",
-            fontWeight: 700,
+            ...guideBodyStyle,
+            whiteSpace: "pre-line", // (추가) \n을 줄바꿈으로 표시
+            lineHeight: 1.8,
           }}
         >
-          🔍 상세 가이드
-        </h3>
-        {/* TODO: 상세 가이드 내용 */}
-        <p style={{ margin: 0 }}>
-          {/* 단계별 상세 가이드 (임시) */}
-          {currentStep}단계의 상세 가이드입니다. 더 자세한 정보가 필요한 경우
-          이곳을 참고하세요.
+          {currentStepData.detail}
         </p>
       </section>
     </div>
   );
 }
+
+// --- (추가) 네비게이션 버튼 스타일 ---
+const navButtonStyle: React.CSSProperties = {
+  background: "#f3f4f6",
+  border: "1px solid #e5e7eb",
+  borderRadius: "8px",
+  padding: "10px",
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
+  cursor: "pointer",
+  color: "#374151",
+  transition: "all 0.2s ease",
+};
+
+// --- (추가) 가이드 섹션 스타일 ---
+const guideHeaderStyle: React.CSSProperties = {
+  display: "flex",
+  alignItems: "center",
+  gap: "6px",
+  fontWeight: "600",
+  fontSize: "15px",
+  color: "#111827",
+  margin: 0,
+  marginBottom: "10px",
+};
+
+const guideBodyStyle: React.CSSProperties = {
+  fontSize: "14px",
+  color: "#374151",
+  margin: 0,
+  lineHeight: 1.7,
+};
+

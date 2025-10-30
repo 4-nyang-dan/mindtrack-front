@@ -12,7 +12,8 @@ import LoadingQuestion from "../layout/LoadingQuestion";
 import SuggestionReplace from "./Suggestion/SuggestionReplace";
 import AuthCard from "./auth/AuthCard";
 import ModeSelection from "./Purpose/ModeSelection";
-import GoalTracker from "./Goal/GoalTracker";
+import GoalTracker, { PlanData } from "./Goal/GoalTracker"; // (수정) GoalTracker와 PlanData 임포트
+import VulnerableModeInput from "./Goal/VulnerableModeInput"; // (추가) 취약계층 모드 컴포넌트 임포트
 
 // AnswerData 인터페이스 정의
 interface AnswerData {
@@ -20,6 +21,50 @@ interface AnswerData {
   ai_thoughts: string; // AI 사고 과정
   answer: string; // 답변 내용
 }
+
+// --- (유지) GoalTracker.tsx에서 가져온 Mock 데이터 (하드코딩) ---
+const mockPlanData: PlanData = {
+  goal: "주민등록등본을 발급받는다.",
+  total_steps: 5,
+  steps: [
+    {
+      step: 1,
+      action: "정부24 웹사이트에 접속한다.",
+      guide: "웹 브라우저 주소창에 www.gov.kr 입력 후 접속한다.",
+      detail:
+        "1. 웹 브라우저를 열고 주소창에 'www.gov.kr'을 입력한다.\n2. Enter 키를 눌러 정부24 웹사이트에 접속한다.\n3. 웹사이트가 로드될 때까지 기다린다.\n4. 홈페이지에서 '주민등록등본 발급' 관련 메뉴를 찾는다.\n5. 필요한 경우, 웹사이트의 이용약관에 동의한다.",
+    },
+    {
+      step: 2,
+      action: "회원가입 또는 로그인을 한다.",
+      guide: "기존 계정으로 로그인하거나 새로 회원가입한다.",
+      detail:
+        "1. 정부24 웹사이트의 로그인 버튼을 클릭한다.\n2. 회원가입을 선택하거나 기존 계정으로 로그인한다.\n3. 회원가입을 선택한 경우, 필요한 정보를 입력하고 약관에 동의한다.\n4. 이메일 인증을 위해 발송된 인증 메일을 확인하고 링크를 클릭한다.\n5. 로그인 화면으로 돌아가서 아이디와 비밀번호를 입력하여 로그인한다.",
+    },
+    {
+      step: 3,
+      action: "주민등록등본 발급 메뉴를 선택한다.",
+      guide: "메인화면의 민원신청 > 주민등록등본 발급을 클릭한다.",
+      detail:
+        "1. 정부24 웹사이트의 메인 페이지에서 '민원신청' 메뉴를 찾는다.\n2. '민원신청' 메뉴를 클릭한다.\n3. '주민등록등본 발급' 옵션을 찾아 선택한다.\n4. 해당 메뉴를 클릭하여 주민등록등본 발급 페이지로 이동한다.",
+    },
+    {
+      step: 4,
+      action: "신청서를 작성하고 필요한 정보를 입력한다.",
+      guide: "이름, 주민등록번호 등 필수 정보를 입력 후 제출한다.",
+      detail:
+        "1. 주민등록등본 발급 메뉴에서 '신청서 작성' 버튼을 클릭한다.\n2. 필요한 개인 정보를 입력한다 (이름, 주민등록번호 등).\n3. 주소 및 연락처 정보를 정확히 입력한다.\n4. 발급받을 주민등록등본의 종류를 선택한다.\n5. 입력한 정보를 확인하고 '제출' 버튼을 클릭한다.",
+    },
+    {
+      step: 5,
+      action: "발급 수수료를 결제하고 주민등록등본을 다운로드한다.",
+      guide: "결제 완료 후 등본을 PDF로 저장하거나 출력한다.",
+      detail:
+        "1. 발급 수수료 결제 메뉴를 클릭한다.\n2. 결제 수단을 선택한다.\n3. 필요한 결제 정보를 입력한다.\n4. 결제 확인 버튼을 클릭한다.\n5. 결제가 완료되면 다운로드 링크를 클릭한다.\n6. 주민등록등본 파일을 저장한다.",
+    },
+  ],
+};
+// -----------------------------------------------------------------
 
 const Main: React.FC = () => {
   const { user, setUser } = useAuth();
@@ -41,6 +86,11 @@ const Main: React.FC = () => {
   // --- (수정) purpose state 분리 ---
   const [purpose, setPurpose] = useState(""); // "확정된" 목표
   const [purposeInputText, setPurposeInputText] = useState(""); // "입력 중인" 목표 텍스트
+  // ---------------------------------
+  
+  // --- (추가) 세부 계획(JSON) 상태 ---
+  const [planData, setPlanData] = useState<PlanData | null>(null);
+  const [isPlanLoading, setIsPlanLoading] = useState(false);
   // ---------------------------------
 
   // --- 모달 상태 추가 ---
@@ -117,11 +167,9 @@ const Main: React.FC = () => {
     setMode(null);
   };
 
-  const handlePurposeSubmit = () => {
-    // [취약계층 모드] 목적 설정 후 처리 (임시)
-    // TODO: 취약계층 모드도 "확정" 로직이 필요하면 handleRegularPurposeSubmit과 유사하게 수정
-    alert(`목적이 설정되었습니다: ${purposeInputText}`);
-  };
+  // --- (제거) 기존 handlePurposeSubmit 제거 ---
+  // const handlePurposeSubmit = () => { ... };
+  // ---------------------------------------
 
   // --- [일반 모드] 목적 설정 제출 핸들러 (수정) ---
   const handleRegularPurposeSubmit = () => {
@@ -145,14 +193,17 @@ const Main: React.FC = () => {
     console.log("요약 버튼 클릭");
   };
 
+  // --- (수정) Reset 함수 ---
   const handleReset = () => {
     if (capturing) return;
     setSuggestionAnswer(null);
     setInputAnswer(null);
     setPurpose(""); // "확정된" 목표 초기화
     setPurposeInputText(""); // "입력 중인" 텍스트도 초기화
+    setPlanData(null); // (추가) 세부 계획 데이터도 초기화
     console.log("초기화 또는 완료 실행");
   };
+  // -------------------------
 
   // --- 모달 관련 핸들러 ---
   const handleShowModal = (text: string) => {
@@ -166,15 +217,42 @@ const Main: React.FC = () => {
     setModalContent("");
   };
 
+  // --- (추가) 목표 확정 공통 로직 (시뮬레이션) ---
+  const handleConfirmGoal = (goalText: string) => {
+    // 1. 확정된 목표 설정 (UI 전환 트리거)
+    setPurpose(goalText);
+    console.log("새 목표 설정:", goalText);
+    
+    // 2. API 호출 시뮬레이션 (Mock 데이터 사용)
+    setIsPlanLoading(true); // 로딩 시작
+    setPlanData(null); // 이전 데이터 초기화
+    
+    // (임시) 1초 후 Mock 데이터를 기반으로 planData 설정
+    setTimeout(() => {
+      const newPlan = {
+        ...mockPlanData,
+        goal: goalText, // 사용자가 입력한 목표로 덮어쓰기
+      };
+      setPlanData(newPlan); // Plan 데이터 설정
+      setIsPlanLoading(false); // 로딩 완료
+    }, 1000); // 1초 딜레이 시뮬레이션
+
+    setPurposeInputText(""); // 입력창 비우기
+    handleCloseModal(); // (일반 모드) 모달 닫기
+  };
+  // --------------------------------------------
+
   // --- (수정) "Yes" 클릭 시 로직 ---
   const handleConfirmModal = () => {
-    setPurpose(modalContent); // "확정된" 목표(purpose)를 이때 설정!
-    // alert(`'${modalContent}' (이)가 새로운 목표로 설정되었습니다.`); // <-- (수정) 이 줄을 주석 처리!
-    console.log("새 목표 설정:", modalContent);
-    setPurposeInputText(""); // 입력창 비우기
-    handleCloseModal();
+    handleConfirmGoal(modalContent); // 공통 로직 호출
   };
   // ---------------------------------
+
+  // --- (추가) "취약계층 모드" 전송 핸들러 ---
+  const handleVulnerableSubmit = (goalText: string) => {
+    handleConfirmGoal(goalText); // 공통 로직 호출
+  };
+  // ---------------------------------------
 
   // ... (모달 스타일 정의는 이전과 동일)
   const modalOverlayStyle: React.CSSProperties = {
@@ -241,6 +319,90 @@ const Main: React.FC = () => {
     );
   }
 
+  // --- (추가) 렌더링 로직 분리를 위한 함수 ---
+  const renderMainContent = () => {
+    // 1. (공통) 목표가 확정되면 (purpose state가 있으면)
+    // (mode === "regular" || mode === "vulnerable") && purpose
+    if (purpose) {
+      return isPlanLoading ? (
+        <LoadingQuestion text="목표에 대한 세부 계획을 생성 중입니다..." />
+      ) : planData ? (
+        <GoalTracker planData={planData} onComplete={handleReset} />
+      ) : (
+        <LoadingQuestion text="계획을 불러오는 중 오류가 발생했습니다." /> // API 호출 실패 시
+      );
+    }
+
+    // 2. (추가) '취약계층 모드'이고 목표가 아직 없으면
+    if (mode === 'vulnerable') {
+      return <VulnerableModeInput onSubmitGoal={handleVulnerableSubmit} />;
+    }
+
+    // 3. (기존) '일반 모드'이고 목표가 아직 없으면
+    if (mode === 'regular') {
+      return (
+        <>
+          {/* 캡처 컨트롤 (공통) */}
+          <CaptureControls
+            capturing={capturing}
+            startCapture={handleStartCapture}
+            stopCapture={handleStopCapture}
+            onSummary={handleSummary}
+            onReset={handleReset}
+          />
+
+          {/* 제안 및 목적 설정 (일반 모드 전용) */}
+          <SuggestionReplace
+            payload={analysisData}
+            onActionClick={handleActionClick} // '앞으로...' (모달)
+            onQuestionClick={handleSimpleQuestionClick} // '혹시...' (답변)
+            mode={mode}
+            purpose={purposeInputText}
+            setPurpose={setPurposeInputText}
+            onPurposeSubmit={handleRegularPurposeSubmit}
+          />
+
+          {/* 나머지 기존 UI (공통) */}
+          {loadingSuggestion && (
+            <LoadingQuestion text="AI가 추천질문에 대한 답변을 준비 중입니다..." />
+          )}
+
+          {suggestionAnswer && !loadingSuggestion && (
+            <AnswerCard
+              title="🧠 추천질문에 대한 AI 답변"
+              data={suggestionAnswer}
+              color="#eef6ff"
+            />
+          )}
+
+          <QuestionInput
+            input={input}
+            setInput={setInput}
+            handleSend={handleSend}
+            loading={loadingInput}
+          />
+
+          {loadingInput && (
+            <LoadingQuestion text="AI가 답변을 작성 중입니다..." />
+          )}
+
+          {/* 직접 입력한 질문에 대한 AI 답변 */}
+          {inputAnswer && !loadingInput && (
+            <AnswerCard
+              title="🧩 직접 입력한 질문에 대한 AI 답변"
+              data={inputAnswer}
+              color="#f8faff"
+            />
+          )}
+        </>
+      );
+    }
+    
+    // 혹시 모를 예외 처리
+    return null; 
+  };
+  // ----------------------------------------
+
   return (
     <div
       style={{
@@ -273,75 +435,8 @@ const Main: React.FC = () => {
           gap: "16px",
         }}
       >
-        {/* --- (수정) 렌더링 로직 --- */}
-        {/* "확정된" purpose가 있을 때만 GoalTracker 렌더링 */}
-        {mode === "regular" && purpose ? (
-          <GoalTracker purpose={purpose} onComplete={handleReset} />
-        ) : (
-          <>
-            {/* 취약계층 모드 (purposeInputText와 setPurposeInputText 사용) */}
-            {mode === "vulnerable" && (
-              <PurposeInput
-                purpose={purposeInputText}
-                setPurpose={setPurposeInputText}
-                onSubmit={handlePurposeSubmit}
-              />
-            )}
-
-            {/* 캡처 컨트롤 (공통) */}
-            <CaptureControls
-              capturing={capturing}
-              startCapture={handleStartCapture}
-              stopCapture={handleStopCapture}
-              onSummary={handleSummary}
-              onReset={handleReset}
-            />
-
-            {/* 제안 및 목적 설정 (수정: 핸들러 분리 전달) */}
-            <SuggestionReplace
-              payload={analysisData}
-              onActionClick={handleActionClick} // '앞으로...' (모달)
-              onQuestionClick={handleSimpleQuestionClick} // '혹시...' (답변)
-              mode={mode}
-              purpose={purposeInputText}
-              setPurpose={setPurposeInputText}
-              onPurposeSubmit={handleRegularPurposeSubmit}
-            />
-
-            {/* 나머지 기존 UI (공통) */}
-            {loadingSuggestion && (
-              <LoadingQuestion text="AI가 추천질문에 대한 답변을 준비 중입니다..." />
-            )}
-
-            {suggestionAnswer && !loadingSuggestion && (
-              <AnswerCard
-                title="🧠 추천질문에 대한 AI 답변"
-                data={suggestionAnswer}
-                color="#eef6ff"
-              />
-            )}
-
-            <QuestionInput
-              input={input}
-              setInput={setInput}
-              handleSend={handleSend}
-              loading={loadingInput}
-            />
-
-            {loadingInput && (
-              <LoadingQuestion text="AI가 답변을 작성 중입니다..." />
-            )}
-
-            {/* 직접 입력한 질문에 대한 AI 답변 */}
-            {inputAnswer && !loadingInput && (
-              <AnswerCard
-                title="🧩 직접 입력한 질문에 대한 AI 답변"
-                data={inputAnswer}
-                color="#f8faff"
-              />
-            )}
-          </>
-        )}
+        {/* --- (수정) 렌더링 로직 호출 --- */}
+        {renderMainContent()}
         {/* ---------------------------------- */}
       </main>
 
