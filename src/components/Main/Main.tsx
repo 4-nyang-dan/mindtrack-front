@@ -1,19 +1,24 @@
 import React, { useState } from "react";
-import Topbar from "../layout/Topbar";
+import Topbar from "../../layout/Topbar";
 
-import CaptureControls from "./Suggestion/CaptureControls";
-import QuestionInput from "./Suggestion/QuestionInput";
-import PurposeInput from "./Purpose/PurposeInput";
-import { useAuth } from "./auth/AuthContext";
-import { useScreenshot } from "../hooks/useScreenshot";
-import { useSuggestions } from "../hooks/useSuggestion";
-import AnswerCard from "./Suggestion/AnswerCard";
-import LoadingQuestion from "../layout/LoadingQuestion";
-import SuggestionReplace from "./Suggestion/SuggestionReplace";
-import AuthCard from "./auth/AuthCard";
-import ModeSelection from "./Purpose/ModeSelection";
-import GoalTracker, { PlanData } from "./Goal/GoalTracker"; // (수정) GoalTracker와 PlanData 임포트
-import VulnerableModeInput from "./Goal/VulnerableModeInput"; // (추가) 취약계층 모드 컴포넌트 임포트
+import CaptureControls from "../Suggestion/CaptureControls";
+import QuestionInput from "../Suggestion/QuestionInput";
+import PurposeInput from "../Purpose/PurposeInput";
+import { useAuth } from "../auth/AuthContext";
+import { useScreenshot } from "../../hooks/useScreenshot";
+import { useSuggestions } from "../../hooks/useSuggestion";
+import AnswerCard from "../Suggestion/AnswerCard";
+import LoadingQuestion from "../../layout/LoadingQuestion";
+import SuggestionReplace from "../Suggestion/SuggestionReplace";
+import AuthCard from "../auth/AuthCard";
+import ModeSelection from "../Purpose/ModeSelection";
+
+
+import GoalTracker, { PlanData } from "../Goal/GoalTracker"; // (수정) GoalTracker와 PlanData 임포트
+import { mockPlanData } from "./mock/planDataMock";
+import VulnerableModeInput from "../Goal/VulnerableModeInput"; // (추가) 취약계층 모드 컴포넌트 임포트
+import MainModal from "./MainModal";
+
 
 // AnswerData 인터페이스 정의
 interface AnswerData {
@@ -22,49 +27,6 @@ interface AnswerData {
   answer: string; // 답변 내용
 }
 
-// --- (유지) GoalTracker.tsx에서 가져온 Mock 데이터 (하드코딩) ---
-const mockPlanData: PlanData = {
-  goal: "주민등록등본을 발급받는다.",
-  total_steps: 5,
-  steps: [
-    {
-      step: 1,
-      action: "정부24 웹사이트에 접속한다.",
-      guide: "웹 브라우저 주소창에 www.gov.kr 입력 후 접속한다.",
-      detail:
-        "1. 웹 브라우저를 열고 주소창에 'www.gov.kr'을 입력한다.\n2. Enter 키를 눌러 정부24 웹사이트에 접속한다.\n3. 웹사이트가 로드될 때까지 기다린다.\n4. 홈페이지에서 '주민등록등본 발급' 관련 메뉴를 찾는다.\n5. 필요한 경우, 웹사이트의 이용약관에 동의한다.",
-    },
-    {
-      step: 2,
-      action: "회원가입 또는 로그인을 한다.",
-      guide: "기존 계정으로 로그인하거나 새로 회원가입한다.",
-      detail:
-        "1. 정부24 웹사이트의 로그인 버튼을 클릭한다.\n2. 회원가입을 선택하거나 기존 계정으로 로그인한다.\n3. 회원가입을 선택한 경우, 필요한 정보를 입력하고 약관에 동의한다.\n4. 이메일 인증을 위해 발송된 인증 메일을 확인하고 링크를 클릭한다.\n5. 로그인 화면으로 돌아가서 아이디와 비밀번호를 입력하여 로그인한다.",
-    },
-    {
-      step: 3,
-      action: "주민등록등본 발급 메뉴를 선택한다.",
-      guide: "메인화면의 민원신청 > 주민등록등본 발급을 클릭한다.",
-      detail:
-        "1. 정부24 웹사이트의 메인 페이지에서 '민원신청' 메뉴를 찾는다.\n2. '민원신청' 메뉴를 클릭한다.\n3. '주민등록등본 발급' 옵션을 찾아 선택한다.\n4. 해당 메뉴를 클릭하여 주민등록등본 발급 페이지로 이동한다.",
-    },
-    {
-      step: 4,
-      action: "신청서를 작성하고 필요한 정보를 입력한다.",
-      guide: "이름, 주민등록번호 등 필수 정보를 입력 후 제출한다.",
-      detail:
-        "1. 주민등록등본 발급 메뉴에서 '신청서 작성' 버튼을 클릭한다.\n2. 필요한 개인 정보를 입력한다 (이름, 주민등록번호 등).\n3. 주소 및 연락처 정보를 정확히 입력한다.\n4. 발급받을 주민등록등본의 종류를 선택한다.\n5. 입력한 정보를 확인하고 '제출' 버튼을 클릭한다.",
-    },
-    {
-      step: 5,
-      action: "발급 수수료를 결제하고 주민등록등본을 다운로드한다.",
-      guide: "결제 완료 후 등본을 PDF로 저장하거나 출력한다.",
-      detail:
-        "1. 발급 수수료 결제 메뉴를 클릭한다.\n2. 결제 수단을 선택한다.\n3. 필요한 결제 정보를 입력한다.\n4. 결제 확인 버튼을 클릭한다.\n5. 결제가 완료되면 다운로드 링크를 클릭한다.\n6. 주민등록등본 파일을 저장한다.",
-    },
-  ],
-};
-// -----------------------------------------------------------------
 
 const Main: React.FC = () => {
   const { user, setUser } = useAuth();
@@ -441,46 +403,13 @@ const Main: React.FC = () => {
       </main>
 
       {/* --- 확인 모달 (이전 코드와 동일) --- */}
-      {isModalOpen && (
-        <div style={modalOverlayStyle}>
-          <div style={modalContentStyle} className="card">
-            <h3
-              style={{
-                marginTop: 0,
-                marginBottom: "24px",
-                textAlign: "center",
-                lineHeight: 1.5,
-              }}
-            >
-              <span
-                style={{
-                  color: "#007bff",
-                  fontWeight: "bold",
-                  wordBreak: "break-all",
-                }}
-              >
-                "{modalContent}"
-              </span>
-              <br />
-              (을)를 목표로 설정 하시겠습니까?
-            </h3>
-            <div
-              style={{
-                display: "flex",
-                justifyContent: "space-around",
-                gap: "16px",
-              }}
-            >
-              <button onClick={handleConfirmModal} style={modalButtonStyleYes}>
-                Yes
-              </button>
-              <button onClick={handleCloseModal} style={modalButtonStyleNo}>
-                No
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+          <MainModal
+            isOpen={isModalOpen}
+            content={modalContent}
+            onConfirm={handleConfirmModal}
+            onClose={handleCloseModal}
+        />
+        
     </div>
   );
 };
