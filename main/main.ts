@@ -20,7 +20,7 @@ ipcMain.on("LOG_TO_MAIN", (_e, message) => {
 
 let accessToken: string | null = null;
 
-// -------------------- SSE 설정 --------------------
+// -------------------- SSE --------------------
 type Stream = { es: any; clients: Set<number> };
 let sseStream: Stream | null = null;
 const EventSourceModule = require("eventsource");
@@ -110,6 +110,7 @@ ipcMain.handle("GET_SCREENSHOT", async () => {
   const base64 = pngBuffer.toString("base64");
   return `data:image/png;base64,${base64}`;
 });
+
 
 // -------------------- 인증 --------------------
 ipcMain.handle(
@@ -250,12 +251,7 @@ function createWindow() {
   const winWidth = 512;
   const winHeight = 1200;
   const primaryDisplay = screen.getPrimaryDisplay();
-  const {
-    x: displayX,
-    y: displayY,
-    width: displayWidth,
-    height: displayHeight,
-  } = primaryDisplay.workArea;
+  const { x: displayX, y: displayY, width: displayWidth, height: displayHeight } = primaryDisplay.workArea;
   const winX = displayX + displayWidth - winWidth;
   const winY = displayY;
 
@@ -275,6 +271,7 @@ function createWindow() {
       sandbox: false,
     },
   });
+
   mainWindow.setMenuBarVisibility(false);
   mainWindow.removeMenu();
   mainWindow.loadURL("http://localhost:3000");
@@ -283,7 +280,10 @@ function createWindow() {
 
 // -------------------- Overlay 윈도우 --------------------
 ipcMain.on("SHOW_OVERLAY", (_e, { boxes, screenshotPath }) => {
+  console.log("SHOW_OVERLAY 호출됨", boxes);
+
   if (overlayWindow) overlayWindow.close();
+  const mainBounds = mainWindow?.getBounds();
 
   overlayWindow = new BrowserWindow({
     transparent: true,
@@ -301,7 +301,6 @@ ipcMain.on("SHOW_OVERLAY", (_e, { boxes, screenshotPath }) => {
     },
   });
 
-  // ✅ 클릭 통과 (밑의 창 클릭 가능)
   overlayWindow.setIgnoreMouseEvents(true, { forward: true });
 
   const overlayFile = path.join(__dirname, "../public/overlay.html");
@@ -311,7 +310,9 @@ ipcMain.on("SHOW_OVERLAY", (_e, { boxes, screenshotPath }) => {
     overlayWindow?.webContents.send("RENDER_OVERLAY", {
       boxes,
       screenshotPath,
+      mainBounds,
     });
+
     overlayWindow!.setAlwaysOnTop(true, "screen-saver");
     overlayWindow!.setVisibleOnAllWorkspaces(true, {
       visibleOnFullScreen: true,
@@ -325,49 +326,6 @@ ipcMain.on("HIDE_OVERLAY", () => {
     overlayWindow.close();
     overlayWindow = null;
   }
-});
-
-// ✅ 새 overlay2.html (영역 선택 전용)
-let overlaySelectWindow: BrowserWindow | null = null;
-
-ipcMain.on("SHOW_OVERLAY_SELECT", () => {
-  if (overlaySelectWindow) overlaySelectWindow.close();
-
-  overlaySelectWindow = new BrowserWindow({
-    transparent: true,
-    frame: false,
-    fullscreen: true,
-    alwaysOnTop: true,
-    skipTaskbar: true,
-    focusable: true, // ESC / 마우스 입력 허용
-    webPreferences: {
-      nodeIntegration: true, // ✅ require("electron") 사용 가능
-      contextIsolation: false,
-    },
-  });
-
-  // overlay2.html 로드
-  const overlayFile = path.join(__dirname, "../public/overlay2.html");
-  overlaySelectWindow.loadFile(overlayFile);
-
-  overlaySelectWindow.once("ready-to-show", () => {
-    overlaySelectWindow!.show();
-  });
-});
-
-// ✅ ESC 또는 드래그 완료 시 닫기
-ipcMain.on("HIDE_OVERLAY_SELECT", () => {
-  if (overlaySelectWindow) {
-    overlaySelectWindow.close();
-    overlaySelectWindow = null;
-  }
-});
-
-// ✅ overlay2에서 전송된 박스 좌표 수신
-ipcMain.on("BOX_SELECTED_FROM_OVERLAY_SELECT", (_e, data) => {
-  console.log("📦 선택된 비율 좌표:", data);
-  // React(Renderer)에 전달
-  mainWindow?.webContents.send("OVERLAY_SELECT_RESULT", data);
 });
 
 // -------------------- App Lifecycle --------------------

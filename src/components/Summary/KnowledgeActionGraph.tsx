@@ -1,19 +1,23 @@
 import React from "react";
 
 const exampleGraph = {
-  root: "주민등록등본 발급",
-  actions: [
+  root: "정부 24에서 주민등록등본 발급하기",
+  methods: [
     {
-      name: "인감증명서 발급",
-      related: ["본인인증", "무인발급기 이용 방법"],
+      method: "정부24 민원 서비스 메뉴에서 '주민등록등본' 검색 후 발급",
+      percentage: 55,
     },
     {
-      name: "전입신고",
-      related: ["정부24 로그인", "주소 변경 서류 안내"],
+      method: "정부24 메인화면에서 '주민등록등본' 바로가기 이용",
+      percentage: 25,
     },
     {
-      name: "가족관계증명서 발급",
-      related: ["정부24 공동인증서", "법원 가족관계등록 시스템"],
+      method: "모바일 정부24 앱을 통해 비회원 인증 후 발급",
+      percentage: 15,
+    },
+    {
+      method: "공동인증서 로그인 후, 'MyGov > 나의 민원' 경로로 접근",
+      percentage: 5,
     },
   ],
 };
@@ -25,113 +29,103 @@ export default function KnowledgeActionGraph() {
         display: "flex",
         flexDirection: "column",
         alignItems: "center",
-        gap: "40px",
         fontFamily: '"Pretendard", "Noto Sans KR", sans-serif',
-        padding: "16px 8px",
+        padding: "24px 12px",
+        gap: "28px",
       }}
     >
-      {/* 중앙 루트 노드 */}
+      {/* 중앙 타이틀 */}
       <div
         style={{
-          backgroundColor: "#2563eb",
+          backgroundColor: "white",
           color: "white",
-          padding: "12px 24px",
-          borderRadius: "8px",
-          fontWeight: 600,
-          fontSize: "16px",
+          padding: "14px 30px",
+          borderRadius: "10px",
+          fontWeight: 7500,
+          fontSize: "15px",
+          
           textAlign: "center",
-          boxShadow: "0 3px 8px rgba(0,0,0,0.15)",
-          position: "relative",
+          boxShadow: "0 4px 10px rgba(0,0,0,0.15)",
         }}
       >
-        {exampleGraph.root}
+        <div style={{ color: "black" }}>
+          {exampleGraph.root}
+        </div>
+        
       </div>
 
-      {/* 연결선 */}
-      <div
+      {/* 설명 */}
+      <p
         style={{
-          marginTop: "-30px",
-          marginBottom: "-30px",
-          width: "2px",
-          height: "30px",
-          backgroundColor: "#2563eb",
-        }}
-      />
-
-      {/* 1차 행동 노드 */}
-      <div
-        style={{
-          display: "flex",
-          flexDirection: "column",
-          alignItems: "center",
-          gap: "36px",
-          width: "100%",
+          color: "#334155",
+          fontSize: "15px",
+          textAlign: "center",
+          marginTop: "-8px",
+          marginBottom: "-4px",
         }}
       >
-        {exampleGraph.actions.map((action, idx) => (
-          <div
-            key={idx}
-            style={{
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "center",
-              gap: "12px",
-            }}
-          >
-            {/* 행동 박스 */}
-            <div
-              style={{
-                backgroundColor: "#f0f9ff",
-                color: "#1e3a8a",
-                padding: "10px 20px",
-                border: "1px solid #93c5fd",
-                borderRadius: "8px",
-                fontWeight: 600,
-                fontSize: "15px",
-                textAlign: "center",
-                boxShadow: "0 2px 6px rgba(0,0,0,0.1)",
-                whiteSpace: "nowrap",
-              }}
-            >
-              {action.name}
-            </div>
+        👉 다른 사용자는 이렇게 해결했어요
+      </p>
 
-            {/* 세부 연결선 */}
-            <div
-              style={{
-                width: "2px",
-                height: "14px",
-                backgroundColor: "#60a5fa",
-              }}
-            />
-
-            {/* 관련 정보 노드 */}
+      {/* 방법별 비율 박스 */}
+      <div
+        style={{
+          width: "100%",
+          maxWidth: "480px",
+          display: "flex",
+          flexDirection: "column",
+          gap: "16px",
+        }}
+      >
+        {exampleGraph.methods.map((item, idx) => (
+          <div key={idx}>
+            {/* 방법 설명 */}
             <div
               style={{
                 display: "flex",
-                flexDirection: "row",
-                justifyContent: "center",
+                justifyContent: "space-between",
                 alignItems: "center",
-                flexWrap: "wrap",
-                gap: "10px",
+                marginBottom: "6px",
               }}
             >
-              {action.related.map((info, i) => (
-                <div
-                  key={i}
-                  style={{
-                    backgroundColor: "#e0f2fe",
-                    color: "#0c4a6e",
-                    border: "1px solid #93c5fd",
-                    borderRadius: "6px",
-                    padding: "6px 14px",
-                    fontSize: "13px",
-                    whiteSpace: "nowrap",
-                  }}
-                >
-                  {info}
-                </div>
-              ))}
+              <span
+                style={{
+                  fontWeight: 600,
+                  color: "#1e3a8a",
+                  fontSize: "15px",
+                }}
+              >
+                {item.method}
+              </span>
+              <span
+                style={{
+                  fontWeight: 500,
+                  color: "#475569",
+                  fontSize: "14px",
+                }}
+              >
+                {item.percentage}%
+              </span>
+            </div>
+
+            {/* 비율 막대 그래프 */}
+            <div
+              style={{
+                backgroundColor: "#e0f2fe",
+                borderRadius: "6px",
+                height: "14px",
+                position: "relative",
+                overflow: "hidden",
+              }}
+            >
+              <div
+                style={{
+                  backgroundColor: "#3b82f6",
+                  width: `${item.percentage}%`,
+                  height: "100%",
+                  transition: "width 0.5s ease",
+                }}
+              />
             </div>
           </div>
         ))}

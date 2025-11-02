@@ -91,26 +91,6 @@ const ModeSelection: React.FC<ModeSelectionProps> = ({
               일반 사용자 모드로 시작하기
             </button>
           </div>
-
-          {/* ✅ 새로 추가된: 화면 영역 선택 버튼 */}
-          <div style={{ marginTop: "24px", textAlign: "center" }}>
-            <button
-              onClick={handleSelectArea}
-              style={{
-                padding: "10px 20px",
-                borderRadius: 8,
-                border: "none",
-                backgroundColor: "#0078ff",
-                color: "white",
-                fontSize: 15,
-                fontWeight: 600,
-                cursor: "pointer",
-                boxShadow: "0 2px 6px rgba(0,0,0,0.1)",
-              }}
-            >
-              🖱️ 화면 영역 선택
-            </button>
-          </div>
         </div>
       </div>
     </div>
