@@ -27,35 +27,25 @@ const electron_1 = require("electron");
 const path = __importStar(require("path"));
 const API_BASE = process.env.API_BASE ?? "http://localhost:8080";
 const APP_NAME = "MindTrack";
-// const SAVE_DIR = path.join(__dirname, "../screenshots");
-// if (!fs.existsSync(SAVE_DIR)) fs.mkdirSync(SAVE_DIR, { recursive: true });
-// -------------------- 로그 --------------------
 electron_1.ipcMain.on("LOG_TO_MAIN", (_e, message) => {
     console.log("[From Renderer]", message);
 });
-// -------------------- 인증 토큰 --------------------
 let accessToken = null;
 let sseStream = null;
 const EventSourceModule = require("eventsource");
-console.log("typeof EventSourceModule:", typeof EventSourceModule);
-console.log("EventSourceModule keys:", Object.keys(EventSourceModule));
-console.log("EventSourceModule.default:", typeof EventSourceModule.default);
 function startSse() {
     if (sseStream || !accessToken) {
         console.warn("[SSE] connect try failed: accessToken not found");
         return;
     }
-    console.log("[SSE] connect start: token =", accessToken);
     const es = new EventSourceModule(`${API_BASE}/api/suggestions/stream?token=${accessToken}`);
     es.addEventListener("suggestions", (ev) => {
         try {
             const payload = JSON.parse(ev.data);
-            if (!sseStream) {
-                throw new Error(`sse suggestions failed: sseStream is null`);
-            }
+            if (!sseStream)
+                throw new Error("sseStream is null");
             for (const wcId of sseStream.clients) {
                 electron_1.webContents.fromId(wcId)?.send("SSE_SUGGESTIONS", payload);
-                console.log("[SSE] suggestion detection: payload:", payload);
             }
         }
         catch (e) {
@@ -63,9 +53,8 @@ function startSse() {
         }
     });
     es.addEventListener("heartbeat", () => {
-        if (!sseStream) {
-            throw new Error(`sse suggestions failed: sseStream is null`);
-        }
+        if (!sseStream)
+            return;
         for (const wcId of sseStream.clients) {
             electron_1.webContents.fromId(wcId)?.send("SSE_HEARTBEAT", { ts: Date.now() });
         }
@@ -77,7 +66,7 @@ function startSse() {
         for (const wcId of sseStream.clients) {
             electron_1.webContents.fromId(wcId)?.send("SSE_ERROR", {
                 status: err?.status || null,
-                message: err?.message || String(err)
+                message: err?.message || String(err),
             });
         }
     };
@@ -94,10 +83,8 @@ function stopSseIfNoClients() {
 }
 // -------------------- 공통 fetch --------------------
 async function apiFetch(pathname, init = {}) {
-    if (!accessToken) {
+    if (!accessToken)
         console.warn(`[apiFetch] JWT 없음 → ${pathname}`);
-        // 여기서 throw해도 됨
-    }
     const isMultipart = init.body instanceof FormData;
     const headers = new Headers(init.headers || {});
     if (accessToken)
@@ -122,14 +109,6 @@ electron_1.ipcMain.handle("GET_SCREENSHOT", async () => {
         throw new Error("화면 소스를 가져오지 못했습니다.");
     const pngBuffer = sources[0].thumbnail.toPNG();
     const base64 = pngBuffer.toString("base64");
-    //const filePath = path.join(SAVE_DIR, `screenshot-${Date.now()}.png`);
-    /*fs.writeFileSync(filePath, pngBuffer);
-  
-    // N초 뒤 자동 삭제
-    (async () => {
-      await delay(30_000); // 30초
-      fs.promises.unlink(filePath).catch(() => {});
-    })(); */
     return `data:image/png;base64,${base64}`;
 });
 // -------------------- 인증 --------------------
@@ -142,7 +121,7 @@ electron_1.ipcMain.handle("AUTH_SIGNUP", async (_e, body) => {
     const d = await r.json().catch(() => ({}));
     if (!r.ok)
         throw new Error(d?.message || `Signup failed: ${r.status}`);
-    accessToken = d.token || null; // JWT 저장
+    accessToken = d.token || null;
     return d;
 });
 electron_1.ipcMain.handle("AUTH_LOGIN", async (_e, body) => {
@@ -155,7 +134,6 @@ electron_1.ipcMain.handle("AUTH_LOGIN", async (_e, body) => {
     if (!r.ok)
         throw new Error(d?.message || `Login failed: ${r.status}`);
     accessToken = d.token || null;
-    //토큰 바뀌면 SSE를 재연결
     if (sseStream) {
         try {
             sseStream.es.close();
@@ -164,7 +142,6 @@ electron_1.ipcMain.handle("AUTH_LOGIN", async (_e, body) => {
         sseStream = null;
     }
     startSse();
-    console.log("[main] 로그인 완료 → accessToken 세팅", accessToken);
     return d;
 });
 electron_1.ipcMain.handle("AUTH_LOGOUT", async () => {
@@ -179,30 +156,45 @@ electron_1.ipcMain.handle("AUTH_LOGOUT", async () => {
     stopSseIfNoClients();
     return { ok: true };
 });
-// -------------------- API 프록시 --------------------
+// -------------------- API --------------------
 electron_1.ipcMain.handle("API_CALL", async (_e, { path, init }) => {
     const r = await apiFetch(path, init || {});
     const text = await r.text();
-    return { status: r.status, body: text, headers: Object.fromEntries(r.headers.entries()) };
+    return {
+        status: r.status,
+        body: text,
+        headers: Object.fromEntries(r.headers.entries()),
+    };
 });
 electron_1.ipcMain.handle("API_CALL_JSON", async (_e, { path, init }) => {
     const r = await apiFetch(path, init || {});
     const text = await r.text();
     const ct = r.headers.get("content-type") || "";
-    const body = ct.includes("application/json") ? JSON.parse(text || "{}") : text;
-    return { status: r.status, body, headers: Object.fromEntries(r.headers.entries()) };
+    const body = ct.includes("application/json")
+        ? JSON.parse(text || "{}")
+        : text;
+    return {
+        status: r.status,
+        body,
+        headers: Object.fromEntries(r.headers.entries()),
+    };
 });
-electron_1.ipcMain.handle("API_UPLOAD", async (_e, { path, file, fields }) => {
+electron_1.ipcMain.handle("API_UPLOAD", async (_e, { path, file, fields, }) => {
     const form = new FormData();
     if (fields)
         for (const [k, v] of Object.entries(fields))
             form.append(k, v);
-    const blob = new Blob([file.buffer], { type: file.type || "application/octet-stream" });
+    const blob = new Blob([file.buffer], {
+        type: file.type || "application/octet-stream",
+    });
     form.append("image", new File([blob], file.name, { type: file.type }), file.name);
     const r = await apiFetch(path, { method: "POST", body: form });
     const text = await r.text();
-    console.log("[API_UPLOAD] accessToken:", accessToken);
-    return { status: r.status, body: text, headers: Object.fromEntries(r.headers.entries()) };
+    return {
+        status: r.status,
+        body: text,
+        headers: Object.fromEntries(r.headers.entries()),
+    };
 });
 electron_1.ipcMain.handle("SSE_START", async (e) => {
     startSse();
@@ -217,7 +209,9 @@ electron_1.ipcMain.handle("SSE_STOP", async (e) => {
     }
     return { ok: true };
 });
-// -------------------- 창 생성 --------------------
+// -------------------- 메인 윈도우 --------------------
+let mainWindow = null;
+let overlayWindow = null;
 function createWindow() {
     const preloadPath = electron_1.app.isPackaged
         ? path.join(__dirname, "preload.js")
@@ -225,16 +219,16 @@ function createWindow() {
     const winWidth = 512;
     const winHeight = 1200;
     const primaryDisplay = electron_1.screen.getPrimaryDisplay();
-    const { x: displayX, y: displayY, width: displayWidth, height: displayHeight } = primaryDisplay.workArea;
-    // 오른쪽 끝 정렬
+    const { x: displayX, y: displayY, width: displayWidth, height: displayHeight, } = primaryDisplay.workArea;
     const winX = displayX + displayWidth - winWidth;
-    const winY = displayY; // 화면의 맨 위
-    const win = new electron_1.BrowserWindow({
+    const winY = displayY;
+    mainWindow = new electron_1.BrowserWindow({
         x: winX,
         y: winY,
         width: winWidth,
         height: winHeight,
         resizable: false,
+        movable: false,
         maximizable: false,
         fullscreenable: false,
         webPreferences: {
@@ -244,11 +238,90 @@ function createWindow() {
             sandbox: false,
         },
     });
-    win.setMenuBarVisibility(false);
-    win.removeMenu();
-    win.loadURL("http://localhost:3000");
-    win.webContents.openDevTools();
+    mainWindow.setMenuBarVisibility(false);
+    mainWindow.removeMenu();
+    mainWindow.loadURL("http://localhost:3000");
+    // mainWindow.webContents.openDevTools();
 }
+// -------------------- Overlay 윈도우 --------------------
+electron_1.ipcMain.on("SHOW_OVERLAY", (_e, { boxes, screenshotPath }) => {
+    if (overlayWindow)
+        overlayWindow.close();
+    overlayWindow = new electron_1.BrowserWindow({
+        transparent: true,
+        frame: false,
+        fullscreen: true,
+        hasShadow: false,
+        alwaysOnTop: true,
+        skipTaskbar: true,
+        focusable: false,
+        resizable: false,
+        movable: false,
+        webPreferences: {
+            nodeIntegration: true,
+            contextIsolation: false,
+        },
+    });
+    // ✅ 클릭 통과 (밑의 창 클릭 가능)
+    overlayWindow.setIgnoreMouseEvents(true, { forward: true });
+    const overlayFile = path.join(__dirname, "../public/overlay.html");
+    overlayWindow.loadFile(overlayFile);
+    overlayWindow.webContents.once("did-finish-load", () => {
+        overlayWindow?.webContents.send("RENDER_OVERLAY", {
+            boxes,
+            screenshotPath,
+        });
+        overlayWindow.setAlwaysOnTop(true, "screen-saver");
+        overlayWindow.setVisibleOnAllWorkspaces(true, {
+            visibleOnFullScreen: true,
+        });
+        overlayWindow.showInactive();
+    });
+});
+electron_1.ipcMain.on("HIDE_OVERLAY", () => {
+    if (overlayWindow) {
+        overlayWindow.close();
+        overlayWindow = null;
+    }
+});
+// ✅ 새 overlay2.html (영역 선택 전용)
+let overlaySelectWindow = null;
+electron_1.ipcMain.on("SHOW_OVERLAY_SELECT", () => {
+    if (overlaySelectWindow)
+        overlaySelectWindow.close();
+    overlaySelectWindow = new electron_1.BrowserWindow({
+        transparent: true,
+        frame: false,
+        fullscreen: true,
+        alwaysOnTop: true,
+        skipTaskbar: true,
+        focusable: true,
+        webPreferences: {
+            nodeIntegration: true,
+            contextIsolation: false,
+        },
+    });
+    // overlay2.html 로드
+    const overlayFile = path.join(__dirname, "../public/overlay2.html");
+    overlaySelectWindow.loadFile(overlayFile);
+    overlaySelectWindow.once("ready-to-show", () => {
+        overlaySelectWindow.show();
+    });
+});
+// ✅ ESC 또는 드래그 완료 시 닫기
+electron_1.ipcMain.on("HIDE_OVERLAY_SELECT", () => {
+    if (overlaySelectWindow) {
+        overlaySelectWindow.close();
+        overlaySelectWindow = null;
+    }
+});
+// ✅ overlay2에서 전송된 박스 좌표 수신
+electron_1.ipcMain.on("BOX_SELECTED_FROM_OVERLAY_SELECT", (_e, data) => {
+    console.log("📦 선택된 비율 좌표:", data);
+    // React(Renderer)에 전달
+    mainWindow?.webContents.send("OVERLAY_SELECT_RESULT", data);
+});
+// -------------------- App Lifecycle --------------------
 electron_1.app.whenReady().then(createWindow);
 electron_1.app.on("window-all-closed", () => {
     if (process.platform !== "darwin")

@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <style>
+      html, body {
+        margin: 0;
+        padding: 0;
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+        background: rgba(0, 0, 0, 0.3);
+        cursor: crosshair;
+      }
+      canvas {
+        position: fixed;
+        top: 0;
+        left: 0;
+      }
+      #info {
+        position: fixed;
+        top: 20px;
+        left: 50%;
+        transform: translateX(-50%);
+        color: white;
+        font-size: 18px;
+        font-family: sans-serif;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="info">드래그하여 영역을 선택하세요 (ESC로 취소)</div>
+    <canvas id="overlayCanvas"></canvas>
+
+    <script>
+      const { ipcRenderer } = require("electron");
+      const canvas = document.getElementById("overlayCanvas");
+      const ctx = canvas.getContext("2d");
+
+      let startX = null, startY = null;
+      let isDragging = false;
+
+      function resizeCanvas() {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+      }
+      window.addEventListener("resize", resizeCanvas);
+      resizeCanvas();
+
+      // ✅ ESC로 취소
+      window.addEventListener("keydown", (e) => {
+        if (e.key === "Escape") {
+          ipcRenderer.send("HIDE_OVERLAY_SELECT");
+        }
+      });
+
+      canvas.addEventListener("mousedown", (e) => {
+        startX = e.clientX;
+        startY = e.clientY;
+        isDragging = true;
+      });
+
+      canvas.addEventListener("mousemove", (e) => {
+        if (!isDragging) return;
+        const x = Math.min(startX, e.clientX);
+        const y = Math.min(startY, e.clientY);
+        const w = Math.abs(e.clientX - startX);
+        const h = Math.abs(e.clientY - startY);
+
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.fillStyle = "rgba(0,0,0,0.4)";
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.clearRect(x, y, w, h);
+        ctx.strokeStyle = "red";
+        ctx.lineWidth = 2;
+        ctx.strokeRect(x, y, w, h);
+      });
+
+      // ✅ 드래그 끝 → 소수 비율 계산 + 자동 복사
+      canvas.addEventListener("mouseup", (e) => {
+        if (!isDragging) return;
+        isDragging = false;
+
+        const x = Math.min(startX, e.clientX);
+        const y = Math.min(startY, e.clientY);
+        const w = Math.abs(e.clientX - startX);
+        const h = Math.abs(e.clientY - startY);
+
+        const ratio = {
+          xRatio: Number((x / window.innerWidth).toFixed(4)),
+          yRatio: Number((y / window.innerHeight).toFixed(4)),
+          widthRatio: Number((w / window.innerWidth).toFixed(4)),
+          heightRatio: Number((h / window.innerHeight).toFixed(4)),
+        };
+
+        const text = `xRatio: ${ratio.xRatio}, yRatio: ${ratio.yRatio}, widthRatio: ${ratio.widthRatio}, heightRatio: ${ratio.heightRatio}`;
+        
+        console.log("📋 드래그 결과:", text);
+
+        // ✅ 클립보드 복사
+        navigator.clipboard.writeText(text).then(() => {
+          alert("✅ 복사 완료!\n" + text);
+        });
+
+        ipcRenderer.send("BOX_SELECTED_FROM_OVERLAY_SELECT", ratio);
+        ipcRenderer.send("HIDE_OVERLAY_SELECT");
+      });
+    </script>
+  </body>
+</html>

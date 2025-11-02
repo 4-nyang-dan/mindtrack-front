@@ -1,6 +1,6 @@
-import { PlanData } from "../Goal/NormalGoalTracker";
+import { PlanData } from "../../Goal/NormalGoalTracker";
 
-export const mockPlanData: PlanData = {
+export const mockPlanDataNormal: PlanData = {
   goal: "주민등록등본을 인터넷을 통해 발급받기.",
   total_steps: 4,
   steps: [
