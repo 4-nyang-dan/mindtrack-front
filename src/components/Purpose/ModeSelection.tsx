@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import Topbar from "../../layout/Topbar";
 import styles from "./ModeSelection.module.css";
 
@@ -13,6 +13,26 @@ const ModeSelection: React.FC<ModeSelectionProps> = ({
   onLogout,
   user,
 }) => {
+  useEffect(() => {
+    const removeListener = window.overlaySelect.onBoxSelected((box) => {
+      console.log("📐 선택된 비율 좌표:", box);
+      alert(
+        `x:${(box.xRatio * 100).toFixed(2)}%, y:${(box.yRatio * 100).toFixed(
+          2
+        )}%, w:${(box.widthRatio * 100).toFixed(2)}%, h:${(
+          box.heightRatio * 100
+        ).toFixed(2)}%`
+      );
+    });
+    return removeListener;
+  }, []);
+
+  // ✅ 버튼 클릭 → Overlay 표시
+  const handleSelectArea = () => {
+    console.log("🖱️ 드래그 모드 시작");
+    window.overlaySelect.show();
+  };
+
   return (
     <div className={styles.modeSelectionWrapper}>
       <Topbar onLogout={onLogout} />
@@ -69,6 +89,26 @@ const ModeSelection: React.FC<ModeSelectionProps> = ({
                 className={styles.modeIcon}
               />
               일반 사용자 모드로 시작하기
+            </button>
+          </div>
+
+          {/* ✅ 새로 추가된: 화면 영역 선택 버튼 */}
+          <div style={{ marginTop: "24px", textAlign: "center" }}>
+            <button
+              onClick={handleSelectArea}
+              style={{
+                padding: "10px 20px",
+                borderRadius: 8,
+                border: "none",
+                backgroundColor: "#0078ff",
+                color: "white",
+                fontSize: 15,
+                fontWeight: 600,
+                cursor: "pointer",
+                boxShadow: "0 2px 6px rgba(0,0,0,0.1)",
+              }}
+            >
+              🖱️ 화면 영역 선택
             </button>
           </div>
         </div>

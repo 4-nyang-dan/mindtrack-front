@@ -113,18 +113,6 @@ export default function CaptureControls({
           ⏹ 정지
         </button>
 
-        {/* '요약' 버튼 */}
-        <button
-          onClick={onSummary}
-          disabled={capturing}
-          style={{
-            ...commonButtonStyle,
-            ...(capturing ? summaryDisabledStyle : summaryActiveStyle),
-          }}
-        >
-          📝 요약
-        </button>
-
         {/* '초기화' 버튼 */}
         <button
           onClick={onReset}

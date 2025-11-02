@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <style>
+      html, body {
+        margin: 0;
+        padding: 0;
+        overflow: hidden;
+        width: 100%;
+        height: 100%;
+        background: transparent;
+      }
+      canvas {
+        position: absolute;
+        top: 0;
+        left: 0;
+      }
+    </style>
+  </head>
+  <body>
+    <canvas id="overlay"></canvas>
+    <script>
+      const { ipcRenderer } = require("electron");
+      const canvas = document.getElementById("overlay");
+      const ctx = canvas.getContext("2d");
+
+      function resizeCanvas() {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+      }
+      window.addEventListener("resize", resizeCanvas);
+      resizeCanvas();
+
+      ipcRenderer.on("RENDER_OVERLAY", (event, { boxes }) => {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        // 반투명 배경
+        ctx.fillStyle = "rgba(0,0,0,0.6)";
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+        boxes.forEach(b => {
+          // ✅ 비율 → 픽셀 변환
+          const x = b.x * canvas.width;
+          const y = b.y * canvas.height;
+          const w = b.width * canvas.width;
+          const h = b.height * canvas.height;
+
+          ctx.clearRect(x, y, w, h);
+          ctx.strokeStyle = "rgba(255,0,0,0.9)";
+          ctx.lineWidth = 3;
+          ctx.strokeRect(x, y, w, h);
+        });
+      });
+    </script>
+  </body>
+</html>

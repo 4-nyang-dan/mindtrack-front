@@ -1,47 +1,23 @@
 import { contextBridge, ipcRenderer } from "electron";
-// contextBridge를 통해 안전하게 렌더러에게 메인 프로세스 기능 노출
+
 console.log("-- preload script is running in Electron --");
 
-// --- 인증/프록시  ---
+// --- 인증/프록시 ---
 contextBridge.exposeInMainWorld("auth", {
   signup: (userId: string, email: string, password: string) =>
     ipcRenderer.invoke("AUTH_SIGNUP", { userId, email, password }),
   login: (userId: string, password: string) =>
     ipcRenderer.invoke("AUTH_LOGIN", { userId, password }),
   logout: () => ipcRenderer.invoke("AUTH_LOGOUT"),
- 
 });
 
-
-
-// 렌더러에게 받은 캡처 요청을 ipc를 통해 메인 프로세스에게 전달.
-/*contextBridge.exposeInMainWorld("capture", {
-  getScreenshot: async () => {
-    const filePath = await ipcRenderer.invoke("GET_SCREENSHOT");
-    console.log("ipcRenderer invoked");
-    //console.log("Save filesto folder successfully:", filePath);
-    // main 프로세스로 메시지 전송
-    //return await ipcRenderer.invoke("GET_SCREENSHOT");
-
-    return filePath;
-  },
-  logToMain: (msg: string) => ipcRenderer.send("LOG_TO_MAIN", msg),
-});*/
-
-
+// --- 캡처 ---
 contextBridge.exposeInMainWorld("capture", {
   getScreenshot: async () => ipcRenderer.invoke("GET_SCREENSHOT"),
   logToMain: (msg: string) => ipcRenderer.send("LOG_TO_MAIN", msg),
 });
 
-/**
- * 백엔드 일반 호출 (메인이 HTTP 호출을 대행)
- * - API_CALL: 임의의 fetch 프록시
- * - API_UPLOAD: 파일 업로드 프록시 (form-data 구성은 메인에서)
- *
- * 권장: 메인 프로세스가 로그인 성공 시 받은 JWT를 보관하고,
- *      API_CALL/API_UPLOAD 프록시에 Authorization 헤더를 자동 부착.
- */
+// --- 백엔드 API 프록시 ---
 contextBridge.exposeInMainWorld("api", {
   call: (path: string, init?: { method?: string; headers?: any; body?: any }) =>
     ipcRenderer.invoke("API_CALL", { path, init }),
@@ -55,11 +31,11 @@ contextBridge.exposeInMainWorld("api", {
     fields?: Record<string, string>
   ) => ipcRenderer.invoke("API_UPLOAD", { path, file, fields }),
 
-  // SSE 제어
+  // SSE
   startSuggestionsStream: () => ipcRenderer.invoke("SSE_START"),
-  stopSuggestionsStream:  () => ipcRenderer.invoke("SSE_STOP"),
+  stopSuggestionsStream: () => ipcRenderer.invoke("SSE_STOP"),
 
-  // 리스너
+  // SSE 리스너
   onSuggestions: (handler: (payload: any) => void) => {
     const fn = (_: any, data: any) => handler(data);
     ipcRenderer.on("SSE_SUGGESTIONS", fn);
@@ -77,5 +53,22 @@ contextBridge.exposeInMainWorld("api", {
   },
 });
 
+// --- 오버레이 컨트롤 ---
+contextBridge.exposeInMainWorld("overlay", {
+  show: (data: { boxes: any[]; screenshotPath: string }) =>
+    ipcRenderer.send("SHOW_OVERLAY", data),
+  hide: () => ipcRenderer.send("HIDE_OVERLAY"),
+});
+
+// --- 새 overlay2.html (화면 영역 선택용) ---
+contextBridge.exposeInMainWorld("overlaySelect", {
+  show: () => ipcRenderer.send("SHOW_OVERLAY_SELECT"),
+  hide: () => ipcRenderer.send("HIDE_OVERLAY_SELECT"),
+  onBoxSelected: (handler: (box: any) => void) => {
+    const fn = (_: any, data: any) => handler(data);
+    ipcRenderer.on("OVERLAY_SELECT_RESULT", fn);
+    return () => ipcRenderer.removeListener("OVERLAY_SELECT_RESULT", fn);
+  },
+});
 
 console.log("[preload] loaded");
