@@ -10,7 +10,7 @@ export const mockPlanDataNormal: PlanData = {
       guide: "웹 브라우저 주소창에 www.gov.kr 입력 후 접속한다.",
       detail:
         "1. 웹 브라우저를 열고 주소창에 '정부24'를 입력하여 검색한다.\n2. 검색 결과에서 정부24 웹사이트 링크를 클릭하여 접속한다.\n3. 웹사이트가 로드될 때까지 기다린다.\n4. 페이지가 완전히 로드되면, 화면에서 '주민등록등본 발급' 관련 메뉴를 찾는다.\n5. 해당 메뉴를 클릭하여 주민등록등본 발급 페이지로 이동한다.",
-      highlight: { x: 100, y: 200, width: 280, height: 120 },
+      highlight: { x: 0.1415, y: 0.4917, width: 0.0929, height: 0.0498 },
     },
     {
       step: 2,
@@ -18,7 +18,7 @@ export const mockPlanDataNormal: PlanData = {
       guide: "기존 계정으로 로그인하거나 새로 회원가입한다.",
       detail:
         "1. 간편인증 옵션을 선택한다.\n2. 인증 수단(예: 카카오톡, 토스 등)을 선택한다.\n3. 선택한 인증 수단에 따라 필요한 정보를 입력한다.\n4. 인증 요청을 확인하고 진행한다.\n5. 인증이 완료되면 로그인 상태가 유지되는지 확인한다.",
-      highlight: { x: 320, y: 140, width: 200, height: 90 },
+      highlight: { x: 0.1415, y: 0.4917, width: 0.0929, height: 0.0498 },
     },
     {
       step: 3,
@@ -26,7 +26,7 @@ export const mockPlanDataNormal: PlanData = {
       guide: "메인화면의 민원신청 > 주민등록등본 발급을 클릭한다.",
       detail:
         "1. 주민등록등본 발급 신청서를 작성한다.\n2. 필요한 정보를 입력한다 (예: 주민등록번호, 신청 사유 등).\n3. 신청 내용을 확인하고 제출 버튼을 클릭한다.\n4. 발급 완료 메시지를 확인한다.\n5. 주민등록등본을 다운로드하거나 출력한다.",
-      highlight: { x: 80, y: 360, width: 260, height: 110 },
+      highlight: { x: 0.1415, y: 0.4917, width: 0.0929, height: 0.0498 },
     },
     {
       step: 4,
@@ -34,7 +34,7 @@ export const mockPlanDataNormal: PlanData = {
       guide: "이름, 주민등록번호 등 필수 정보를 입력 후 제출한다.",
       detail:
         "1. 발급된 주민등록등본의 다운로드 링크를 클릭한다.\n2. 다운로드 형식을 선택한다 (PDF, 이미지 등).\n3. '다운로드' 버튼을 클릭하여 파일을 저장한다.\n4. 출력할 경우, 저장된 파일을 열고 인쇄 옵션을 선택한다.\n5. 프린터를 선택하고 인쇄 버튼을 클릭하여 주민등록등본을 출력한다.",
-      highlight: { x: 160, y: 250, width: 230, height: 100 },
+      highlight: { x: 0.1415, y: 0.4917, width: 0.0929, height: 0.0498 },
     },
   ],
 };

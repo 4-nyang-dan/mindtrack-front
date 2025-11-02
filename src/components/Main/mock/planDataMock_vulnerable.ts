@@ -26,7 +26,7 @@ export const mockPlanDataVulnerable: PlanData = {
     },
     {
       step: 5,
-      guide: "",
+      guide: "'회원 신청하기' 버튼을 눌러주세요.",
       highlight: { x: 0.2494, y: 0.5194, width: 0.0898, height: 0.0609 },
     },
     {
@@ -61,7 +61,7 @@ export const mockPlanDataVulnerable: PlanData = {
     },
     {
       step: 12,
-      guide: "입력이 모두 끝나면 '인증 요청' 버튼을 눌러주세요.",
+      guide: "'인증 요청' 버튼을 눌러 인증을 진행하세요.",
       highlight: { x: 0.3734, y: 0.7763, width: 0.1727, height: 0.0465 },
     },
   ],

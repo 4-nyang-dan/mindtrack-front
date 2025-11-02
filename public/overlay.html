@@ -32,15 +32,25 @@
       window.addEventListener("resize", resizeCanvas);
       resizeCanvas();
 
-      ipcRenderer.on("RENDER_OVERLAY", (event, { boxes }) => {
+      ipcRenderer.on("RENDER_OVERLAY", (event, { boxes, mainBounds }) => {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-        // 반투명 배경
+        // 전체 반투명 배경
         ctx.fillStyle = "rgba(0,0,0,0.6)";
         ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-        boxes.forEach(b => {
-          // ✅ 비율 → 픽셀 변환
+        // ✅ 우리 프로그램 영역(mainWindow) 투명하게 뚫기
+        if (mainBounds) {
+          ctx.clearRect(
+            mainBounds.x,
+            mainBounds.y,
+            mainBounds.width,
+            mainBounds.height
+          );
+        }
+
+        // ✅ 하이라이트 박스 표시
+        boxes.forEach((b) => {
           const x = b.x * canvas.width;
           const y = b.y * canvas.height;
           const w = b.width * canvas.width;

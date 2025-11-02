@@ -1,8 +1,8 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const electron_1 = require("electron");
-console.log("-- preload script is running in Electron --");
-// --- 인증/프록시 ---
+console.log("[preload] running...");
+// --- 인증 ---
 electron_1.contextBridge.exposeInMainWorld("auth", {
     signup: (userId, email, password) => electron_1.ipcRenderer.invoke("AUTH_SIGNUP", { userId, email, password }),
     login: (userId, password) => electron_1.ipcRenderer.invoke("AUTH_LOGIN", { userId, password }),
@@ -38,12 +38,12 @@ electron_1.contextBridge.exposeInMainWorld("api", {
         return () => electron_1.ipcRenderer.removeListener("SSE_HEARTBEAT", fn);
     },
 });
-// --- 오버레이 컨트롤 ---
+// --- 오버레이 ---
 electron_1.contextBridge.exposeInMainWorld("overlay", {
     show: (data) => electron_1.ipcRenderer.send("SHOW_OVERLAY", data),
     hide: () => electron_1.ipcRenderer.send("HIDE_OVERLAY"),
 });
-// --- 새 overlay2.html (화면 영역 선택용) ---
+// --- 오버레이 선택 ---
 electron_1.contextBridge.exposeInMainWorld("overlaySelect", {
     show: () => electron_1.ipcRenderer.send("SHOW_OVERLAY_SELECT"),
     hide: () => electron_1.ipcRenderer.send("HIDE_OVERLAY_SELECT"),
@@ -53,4 +53,4 @@ electron_1.contextBridge.exposeInMainWorld("overlaySelect", {
         return () => electron_1.ipcRenderer.removeListener("OVERLAY_SELECT_RESULT", fn);
     },
 });
-console.log("[preload] loaded");
+console.log("[preload] loaded successfully");

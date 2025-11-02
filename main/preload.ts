@@ -1,8 +1,8 @@
 import { contextBridge, ipcRenderer } from "electron";
 
-console.log("-- preload script is running in Electron --");
+console.log("[preload] running...");
 
-// --- 인증/프록시 ---
+// --- 인증 ---
 contextBridge.exposeInMainWorld("auth", {
   signup: (userId: string, email: string, password: string) =>
     ipcRenderer.invoke("AUTH_SIGNUP", { userId, email, password }),
@@ -53,14 +53,14 @@ contextBridge.exposeInMainWorld("api", {
   },
 });
 
-// --- 오버레이 컨트롤 ---
+// --- 오버레이 ---
 contextBridge.exposeInMainWorld("overlay", {
   show: (data: { boxes: any[]; screenshotPath: string }) =>
     ipcRenderer.send("SHOW_OVERLAY", data),
   hide: () => ipcRenderer.send("HIDE_OVERLAY"),
 });
 
-// --- 새 overlay2.html (화면 영역 선택용) ---
+// --- 오버레이 선택 ---
 contextBridge.exposeInMainWorld("overlaySelect", {
   show: () => ipcRenderer.send("SHOW_OVERLAY_SELECT"),
   hide: () => ipcRenderer.send("HIDE_OVERLAY_SELECT"),
@@ -71,4 +71,4 @@ contextBridge.exposeInMainWorld("overlaySelect", {
   },
 });
 
-console.log("[preload] loaded");
+console.log("[preload] loaded successfully");
